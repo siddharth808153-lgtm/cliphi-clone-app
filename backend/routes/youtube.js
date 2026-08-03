@@ -3,7 +3,10 @@ const { google } = require("googleapis");
 const path = require("path");
 const fs = require("fs");
 
-const SCOPES = ["https://www.googleapis.com/auth/youtube.upload"];
+const SCOPES = [
+  "https://www.googleapis.com/auth/youtube.upload",
+  "https://www.googleapis.com/auth/youtube.readonly",
+];
 
 function getOAuthClient() {
   return new google.auth.OAuth2(
@@ -13,7 +16,7 @@ function getOAuthClient() {
   );
 }
 
-// Step 1: send the user to Google's consent screen.
+// Step 1: Redirect to Google consent screen
 router.get("/google", (req, res) => {
   const oauth2Client = getOAuthClient();
   const url = oauth2Client.generateAuthUrl({
@@ -24,8 +27,7 @@ router.get("/google", (req, res) => {
   res.redirect(url);
 });
 
-// Step 2: Google redirects back here with a one-time code; exchange it
-// for tokens and stash them in the session (fine for local single-user use).
+// Step 2: OAuth callback handler
 router.get("/google/callback", async (req, res) => {
   const { code } = req.query;
   const oauth2Client = getOAuthClient();
@@ -40,14 +42,51 @@ router.get("/google/callback", async (req, res) => {
   }
 });
 
+// Check OAuth connection status
 router.get("/youtube/status", (req, res) => {
   res.json({ connected: !!(req.session && req.session.youtubeTokens) });
 });
 
-// Step 3: upload a rendered clip by filename (the file must already exist
-// in the python project's LOCAL_OUTPUT_DIR).
-router.post("/upload", async (req, res) => {
-  const { filename, title, description } = req.body;
+// AI SEO Generator — generates viral title, description, and hashtags for max views
+router.post("/youtube/generate-seo", (req, res) => {
+  const { title, hook, text } = req.body;
+  const rawTitle = (title || hook || "Must Watch Highlight").trim();
+  
+  // Clean up quotes
+  const cleanTitle = rawTitle.replace(/^["']|["']$/g, "");
+  
+  // Create high-converting viral title variants
+  const emojis = ["🔥", "😱", "🤯", "💥", "👀", "✨"];
+  const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+  
+  const seoTitle = `${randomEmoji} ${cleanTitle} #Shorts`;
+  
+  // High-view SEO hashtag cloud
+  const hashtags = [
+    "#Shorts", "#YouTubeShorts", "#Viral", "#Trending",
+    "#FYP", "#MustWatch", "#ShortsVideo", "#ExplorePage", "#ViralShorts"
+  ];
+  
+  const seoDescription = [
+    `🔥 ${cleanTitle}`,
+    "",
+    text ? `"${text.slice(0, 180).trim()}..."` : "Watch this epic clip until the end!",
+    "",
+    "👍 Like & Subscribe for daily shorts!",
+    "",
+    hashtags.join(" "),
+  ].join("\n");
+
+  res.json({
+    title: seoTitle,
+    description: seoDescription,
+    hashtags,
+  });
+});
+
+// Upload clip directly to YouTube
+router.post("/youtube/upload", async (req, res) => {
+  const { filename, title, description, privacyStatus } = req.body;
 
   if (!req.session || !req.session.youtubeTokens) {
     return res
@@ -77,14 +116,12 @@ router.post("/upload", async (req, res) => {
       part: ["snippet", "status"],
       requestBody: {
         snippet: {
-          title: title || "New Short",
-          description: description || "",
+          title: title || "New Short #Shorts",
+          description: description || "Uploaded via Shortcut App #Shorts",
           categoryId: "22",
         },
         status: {
-          // Uploaded private by default so you can review before publishing —
-          // change to "public" here once you're confident in the pipeline.
-          privacyStatus: "private",
+          privacyStatus: privacyStatus || "public",
           selfDeclaredMadeForKids: false,
         },
       },
@@ -93,12 +130,52 @@ router.post("/upload", async (req, res) => {
       },
     });
 
+    const videoId = response.data.id;
     res.json({
-      videoId: response.data.id,
-      url: `https://youtube.com/watch?v=${response.data.id}`,
+      videoId,
+      url: `https://youtube.com/shorts/${videoId}`,
     });
   } catch (err) {
-    console.error(err);
+    res.status(500).json({ error: err.message || "YouTube upload failed" });
+  }
+});
+
+// YouTube Channel Analytics & Stats
+router.get("/youtube/analytics", async (req, res) => {
+  if (!req.session || !req.session.youtubeTokens) {
+    return res.status(401).json({ connected: false, error: "Not connected" });
+  }
+
+  const oauth2Client = getOAuthClient();
+  oauth2Client.setCredentials(req.session.youtubeTokens);
+  const youtube = google.youtube({ version: "v3", auth: oauth2Client });
+
+  try {
+    const channelRes = await youtube.channels.list({
+      part: ["snippet", "statistics"],
+      mine: true,
+    });
+
+    const channel = channelRes.data.items?.[0];
+    if (!channel) {
+      return res.json({ connected: true, noChannel: true });
+    }
+
+    const stats = channel.statistics;
+    const snippet = channel.snippet;
+
+    res.json({
+      connected: true,
+      channel: {
+        title: snippet.title,
+        avatar: snippet.thumbnails?.default?.url,
+        customUrl: snippet.customUrl,
+        subscribers: parseInt(stats.subscriberCount || 0).toLocaleString(),
+        views: parseInt(stats.viewCount || 0).toLocaleString(),
+        videos: parseInt(stats.videoCount || 0).toLocaleString(),
+      },
+    });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });

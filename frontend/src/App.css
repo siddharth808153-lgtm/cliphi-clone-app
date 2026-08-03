@@ -54,8 +54,49 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 32px;
+  padding: 16px 32px;
   border-bottom: 1px solid var(--panel-border);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.channel-stats-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--panel-border);
+}
+
+.channel-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.channel-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.channel-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.channel-subscribers {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-family: "JetBrains Mono", monospace;
 }
 
 .brand {
@@ -743,6 +784,30 @@ main {
   font-size: 0.85rem;
   color: var(--text-dim);
   font-style: italic;
+}
+
+.ai-seo-btn {
+  background: linear-gradient(135deg, rgba(255, 90, 54, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(255, 90, 54, 0.25);
+  color: #ff9d7d;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+.ai-seo-btn:hover {
+  border-color: var(--accent);
+  color: #fff;
+  background: linear-gradient(135deg, rgba(255, 90, 54, 0.25), rgba(167, 139, 250, 0.25));
+  transform: translateY(-1px);
+}
+.ai-seo-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
 }
 
 .clip-desc-input {

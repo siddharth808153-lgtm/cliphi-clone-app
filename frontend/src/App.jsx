@@ -272,6 +272,29 @@ function ClipCard({ clip, index, youtubeConnected, onConnectYoutube }) {
   const [status, setStatus] = useState("idle");
   const [resultUrl, setResultUrl] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
+
+  async function handleGenerateSeo() {
+    setIsGeneratingSeo(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/youtube/generate-seo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: clip.title,
+          hook: clip.hook_sentence,
+          text: clip.transcript_text,
+        }),
+      });
+      const data = await res.json();
+      if (data.title) setTitle(data.title);
+      if (data.description) setDescription(data.description);
+    } catch (err) {
+      console.error("SEO generation failed:", err);
+    } finally {
+      setIsGeneratingSeo(false);
+    }
+  }
 
   async function handleUpload() {
     if (!youtubeConnected) {
@@ -281,7 +304,7 @@ function ClipCard({ clip, index, youtubeConnected, onConnectYoutube }) {
     setStatus("uploading");
     setErrorMsg(null);
     try {
-      const res = await fetch(`${API_BASE}/api/upload`, {
+      const res = await fetch(`${API_BASE}/api/youtube/upload`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -332,11 +355,20 @@ function ClipCard({ clip, index, youtubeConnected, onConnectYoutube }) {
           <p className="clip-hook">"{clip.hook_sentence}"</p>
         )}
 
+        <button
+          type="button"
+          className="ai-seo-btn"
+          onClick={handleGenerateSeo}
+          disabled={isGeneratingSeo}
+        >
+          {isGeneratingSeo ? "Generating SEO Title & Tags…" : "✨ AI Auto-SEO (Title, Description & Tags)"}
+        </button>
+
         <textarea
           className="clip-desc-input"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          rows={2}
+          rows={3}
         />
 
         <button
@@ -506,6 +538,7 @@ export default function App() {
   const [uploadFilename, setUploadFilename] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [libRefresh, setLibRefresh] = useState(0);
+  const [channelAnalytics, setChannelAnalytics] = useState(null);
   const fileInputRef = useRef(null);
   const uploadedPathRef = useRef(null);
   const intakeRef = useRef(null);
@@ -513,7 +546,15 @@ export default function App() {
   useEffect(() => {
     fetch(`${API_BASE}/api/youtube/status`, { credentials: "include" })
       .then((r) => r.json())
-      .then((d) => setYoutubeConnected(d.connected))
+      .then((d) => {
+        setYoutubeConnected(d.connected);
+        if (d.connected) {
+          fetch(`${API_BASE}/api/youtube/analytics`, { credentials: "include" })
+            .then((r) => r.json())
+            .then((ad) => { if (ad.channel) setChannelAnalytics(ad.channel); })
+            .catch(() => {});
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -709,12 +750,28 @@ export default function App() {
           <span className="brand-mark">▮▮▶</span>
           <span className="brand-name">Shortcut</span>
         </div>
-        <button
-          className={`youtube-btn ${youtubeConnected ? "connected" : ""}`}
-          onClick={connectYoutube}
-        >
-          {youtubeConnected ? "YouTube connected ✓" : "Connect YouTube"}
-        </button>
+
+        <div className="topbar-right">
+          {channelAnalytics && (
+            <div className="channel-stats-badge" title="Connected YouTube Channel Analytics">
+              {channelAnalytics.avatar && (
+                <img src={channelAnalytics.avatar} alt="Channel" className="channel-avatar" />
+              )}
+              <div className="channel-info">
+                <span className="channel-name">{channelAnalytics.title}</span>
+                <span className="channel-subscribers">
+                  👥 {channelAnalytics.subscribers} subs &middot; 👁️ {channelAnalytics.views} views
+                </span>
+              </div>
+            </div>
+          )}
+          <button
+            className={`youtube-btn ${youtubeConnected ? "connected" : ""}`}
+            onClick={connectYoutube}
+          >
+            {youtubeConnected ? "YouTube connected ✓" : "Connect YouTube"}
+          </button>
+        </div>
       </header>
 
       <main className="app-main">
