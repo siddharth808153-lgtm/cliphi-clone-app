@@ -46,7 +46,9 @@ router.post("/generate", (req, res) => {
     { pattern: /\[clip\]/, step: "crop", label: "Rendering vertical clips" },
   ];
 
-  let currentStep = null;
+  const STEP_ORDER = { download: 0, transcribe: 1, analyze: 2, highlights: 3, crop: 4 };
+
+  let currentStep = "download";
 
   function onProgress(line) {
     let detail = null;
@@ -76,8 +78,12 @@ router.post("/generate", (req, res) => {
     // Try to match a pipeline step
     for (const { pattern, step, label } of STEP_MAP) {
       if (pattern.test(line)) {
-        currentStep = step;
-        sendEvent("step", { step, label: overrideLabel || label, detail });
+        const currentIdx = STEP_ORDER[currentStep] !== undefined ? STEP_ORDER[currentStep] : -1;
+        const newIdx = STEP_ORDER[step] !== undefined ? STEP_ORDER[step] : 0;
+        if (newIdx >= currentIdx) {
+          currentStep = step;
+          sendEvent("step", { step, label: overrideLabel || label, detail });
+        }
         break;
       }
     }

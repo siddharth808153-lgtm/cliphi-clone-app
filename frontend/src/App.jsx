@@ -696,7 +696,14 @@ export default function App() {
 
           if (eventType && eventData) {
             if (eventType === "step") {
-              if (eventData.step) setCurrentStep(eventData.step);
+              if (eventData.step) {
+                const STEP_ORDER = { download: 0, transcribe: 1, analyze: 2, highlights: 3, crop: 4 };
+                setCurrentStep((prev) => {
+                  const prevIdx = STEP_ORDER[prev] !== undefined ? STEP_ORDER[prev] : -1;
+                  const newIdx = STEP_ORDER[eventData.step] !== undefined ? STEP_ORDER[eventData.step] : 0;
+                  return newIdx >= prevIdx ? eventData.step : prev;
+                });
+              }
               if (eventData.label) {
                 setStepLabels((prev) => ({
                   ...prev,
