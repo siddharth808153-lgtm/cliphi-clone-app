@@ -147,14 +147,20 @@ def transcribe_local(media_path: str, language: Optional[str] = None) -> Dict:
     segments_iter, info = model.transcribe(**transcribe_kwargs)
 
     segments = []
+    total_dur = float(getattr(info, "duration", 0.0))
+    last_logged_s = 0.0
     for s in segments_iter:
         segments.append({
             "start": float(s.start),
             "end": float(s.end),
             "text": (s.text or "").strip(),
         })
+        if total_dur > 0 and (s.end - last_logged_s >= 25):
+            last_logged_s = s.end
+            pct = min(100, int((s.end / total_dur) * 100))
+            print(f"[transcribe/local] progress: {s.end:.0f}/{total_dur:.0f}s ({pct}%)", flush=True)
 
-    duration = float(getattr(info, "duration", 0.0)) or (segments[-1]["end"] if segments else 0.0)
+    duration = total_dur or (segments[-1]["end"] if segments else 0.0)
     print(f"[transcribe/local] {len(segments)} segments, {duration:.0f}s of audio", flush=True)
     transcript = {"duration": duration, "segments": segments}
     cache_path = _write_srt_cache(media_path, transcript)
