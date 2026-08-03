@@ -73,9 +73,11 @@ def _resolve_local_path(source: str) -> Optional[str]:
     if parsed.scheme in ("http", "https"):
         return None
 
-    candidate = Path(source).expanduser()
-    if candidate.exists() and candidate.is_file():
-        return str(candidate.resolve())
+    # Check relative to working dir, output dir, or parent workspace
+    for loc in (Path(source), Path(LOCAL_OUTPUT_DIR) / source, Path("..") / source, Path("..") / ".." / source):
+        candidate = loc.expanduser()
+        if candidate.exists() and candidate.is_file():
+            return str(candidate.resolve())
 
     if any(sep in source for sep in (os.sep, "/")) or source.startswith("~") or source.startswith("."):
         raise RuntimeError(f"Local file path does not exist: {source}")
@@ -120,16 +122,21 @@ def download_youtube_local(video_url: str, fmt: str = "720", out_dir: Optional[s
         "noprogress": True,
     }
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(video_url, download=True)
-        path = ydl.prepare_filename(info)
-        # merge_output_format may rename the extension after merge
-        if not os.path.exists(path):
-            stem, _ = os.path.splitext(path)
-            for ext in (".mp4", ".mkv", ".webm"):
-                if os.path.exists(stem + ext):
-                    path = stem + ext
-                    break
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(video_url, download=True)
+            path = ydl.prepare_filename(info)
+            if not os.path.exists(path):
+                stem, _ = os.path.splitext(path)
+                for ext in (".mp4", ".mkv", ".webm"):
+                    if os.path.exists(stem + ext):
+                        path = stem + ext
+                        break
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed to download video. Please ensure '{video_url}' is a valid full YouTube URL "
+            f"(e.g., https://www.youtube.com/watch?v=...) or valid local file path. Details: {e}"
+        ) from e
 
     print(f"[download/local] ready: {path}", flush=True)
     return path
