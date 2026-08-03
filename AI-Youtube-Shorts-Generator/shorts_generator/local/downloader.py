@@ -96,6 +96,35 @@ def _existing_download(out_dir: str, video_id: str) -> Optional[str]:
     return None
 
 
+def validate_video_url(video_url: str) -> None:
+    """Pre-check if a URL or path is valid and reachable before processing."""
+    local_path = _resolve_local_path(video_url)
+    if local_path:
+        return
+
+    yt_dlp = _import_ytdlp()
+    ydl_opts = {
+        "quiet": True,
+        "no_warnings": True,
+        "skip_download": True,
+        "extract_flat": True,
+    }
+
+    print(f"[download/local] checking link accessibility...", flush=True)
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(video_url, download=False)
+            if not info:
+                raise RuntimeError("Video metadata could not be fetched.")
+    except Exception as e:
+        err_str = str(e)
+        if "Video unavailable" in err_str or "private" in err_str.lower():
+            raise RuntimeError("This YouTube video is unavailable, deleted, or private. Please check the URL.") from e
+        if "is not a valid URL" in err_str or "Unsupported URL" in err_str:
+            raise RuntimeError(f"'{video_url}' is not a valid YouTube URL or local video file.") from e
+        raise RuntimeError(f"Link validation failed: {err_str}") from e
+
+
 def download_youtube_local(video_url: str, fmt: str = "720", out_dir: Optional[str] = None) -> str:
     """Download a remote URL or return a local file path unchanged."""
     local_path = _resolve_local_path(video_url)
@@ -113,6 +142,9 @@ def download_youtube_local(video_url: str, fmt: str = "720", out_dir: Optional[s
         if cached:
             print(f"[download/local] reusing cached download: {cached}", flush=True)
             return cached
+
+    # Fast pre-check link accessibility before downloading
+    validate_video_url(video_url)
 
     if video_id:
         for part_file in Path(out_dir).glob(f"source_{video_id}*.part"):
