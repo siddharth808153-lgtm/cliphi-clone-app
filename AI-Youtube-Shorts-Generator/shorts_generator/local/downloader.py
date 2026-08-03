@@ -30,8 +30,10 @@ def _format_for(fmt: str) -> str:
     except ValueError:
         height = 720
     return (
+        f"best[height<={height}][ext=mp4]/"
         f"bestvideo[height<={height}][ext=mp4]+bestaudio[ext=m4a]/"
-        f"best[height<={height}][ext=mp4]/best"
+        f"bestvideo[height<={height}]+bestaudio/"
+        f"best"
     )
 
 
@@ -112,14 +114,40 @@ def download_youtube_local(video_url: str, fmt: str = "720", out_dir: Optional[s
             print(f"[download/local] reusing cached download: {cached}", flush=True)
             return cached
 
-    print(f"[download/local] {video_url} @ {fmt}p → {out_dir}/", flush=True)
+    if video_id:
+        for part_file in Path(out_dir).glob(f"source_{video_id}*.part"):
+            try:
+                part_file.unlink(missing_ok=True)
+            except Exception:
+                pass
+
+    print(f"[download/local] downloading {video_url} @ {fmt}p...", flush=True)
+
+    last_reported = -10
+
+    def _progress_hook(d):
+        nonlocal last_reported
+        if d.get("status") == "downloading":
+            total = d.get("total_bytes") or d.get("total_bytes_estimate") or 0
+            downloaded = d.get("downloaded_bytes", 0)
+            if total > 0:
+                pct = int((downloaded / total) * 100)
+                if pct >= last_reported + 10 or pct == 100:
+                    last_reported = pct
+                    mb_dn = downloaded / (1024 * 1024)
+                    mb_tot = total / (1024 * 1024)
+                    print(f"[download/local] downloading video: {pct}% ({mb_dn:.1f}MB / {mb_tot:.1f}MB)", flush=True)
+
     ydl_opts = {
         "format": _format_for(fmt),
         "outtmpl": os.path.join(out_dir, "source_%(id)s.%(ext)s"),
         "merge_output_format": "mp4",
+        "overwrites": True,
+        "continuedl": False,
         "quiet": True,
         "no_warnings": True,
         "noprogress": True,
+        "progress_hooks": [_progress_hook],
     }
 
     try:
