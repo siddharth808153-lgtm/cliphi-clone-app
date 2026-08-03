@@ -646,8 +646,8 @@ export default function App() {
     setResult(null);
     setLoading(true);
     setCurrentStep("download");
-    setStepDetails(isLocalInput ? { download: "Reading from disk..." } : {});
-    setStepLabels(isLocalInput ? { download: "Using local video" } : {});
+    setStepDetails(isLocalInput ? { download: "Extracting audio via FFmpeg..." } : {});
+    setStepLabels(isLocalInput ? { download: "Loading video" } : {});
     setLogs(["🚀 Initializing video generation pipeline..."]);
     setTotalElapsed(null);
     const now = Date.now();
