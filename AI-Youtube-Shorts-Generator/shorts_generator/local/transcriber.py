@@ -139,6 +139,7 @@ def transcribe_local(media_path: str, language: Optional[str] = None) -> Dict:
         cmd = [
             "ffmpeg", "-y", "-loglevel", "error",
             "-i", media_path,
+            "-t", "1800",  # Extract 30 mins max per run to keep memory allocation under 50 MB
             "-vn", "-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le",
             wav_path
         ]
