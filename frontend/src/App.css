@@ -281,6 +281,19 @@ main {
   font-weight: 700;
 }
 
+.pipeline-step-badge {
+  margin-left: auto;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 90, 54, 0.12);
+  color: #ff7b5a;
+  border: 1px solid rgba(255, 90, 54, 0.25);
+  box-shadow: 0 0 10px rgba(255, 90, 54, 0.15);
+}
+
 .pipeline-step-dot {
   width: 10px;
   height: 10px;

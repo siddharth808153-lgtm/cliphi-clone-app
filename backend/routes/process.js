@@ -49,15 +49,26 @@ router.post("/generate", (req, res) => {
   let currentStep = null;
 
   function onProgress(line) {
+    let detail = null;
+    if (line.includes("downloading video:")) {
+      const match = line.match(/downloading video:\s*(.*)/i);
+      if (match) detail = match[1].trim();
+    } else if (line.includes("[clip/local]")) {
+      const match = line.match(/\[clip\/local\]\s*(\d+\/\d+:\s*.*)/i);
+      if (match) detail = match[1].trim();
+    }
+
     // Try to match a pipeline step
     for (const { pattern, step, label } of STEP_MAP) {
       if (pattern.test(line)) {
-        if (step !== currentStep) {
-          currentStep = step;
-          sendEvent("step", { step, label });
-        }
+        currentStep = step;
+        sendEvent("step", { step, label, detail });
         break;
       }
+    }
+
+    if (detail && currentStep) {
+      sendEvent("step", { step: currentStep, detail });
     }
 
     // Always forward the raw log line for the detail view

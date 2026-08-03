@@ -61,7 +61,7 @@ function formatDuration(seconds) {
 }
 
 /* ─── Pipeline Progress Component ─────────────────────────────────── */
-function PipelineProgress({ currentStep, logs, startTime, isError, hasEnded }) {
+function PipelineProgress({ currentStep, stepDetails = {}, logs, startTime, isError, hasEnded }) {
   const logsEndRef = useRef(null);
   const [elapsed, setElapsed] = useState(0);
   const [showLogs, setShowLogs] = useState(true);
@@ -171,6 +171,9 @@ function PipelineProgress({ currentStep, logs, startTime, isError, hasEnded }) {
                 <div className="pipeline-step-header">
                   <span className="pipeline-step-icon">{step.icon}</span>
                   <span className="pipeline-step-label">{step.label}</span>
+                  {stepDetails[step.id] && status === "active" && (
+                    <span className="pipeline-step-badge">{stepDetails[step.id]}</span>
+                  )}
                   {status === "done" && (
                     <span className="pipeline-step-time">✓</span>
                   )}
@@ -354,6 +357,7 @@ export default function App() {
   const [numClips, setNumClips] = useState(3);
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(null);
+  const [stepDetails, setStepDetails] = useState({});
   const [logs, setLogs] = useState([]);
   const [startTime, setStartTime] = useState(null);
   const [result, setResult] = useState(null);
@@ -385,6 +389,7 @@ export default function App() {
     setResult(null);
     setLoading(true);
     setCurrentStep("download");
+    setStepDetails({});
     setLogs(["🚀 Initializing video generation pipeline..."]);
     setTotalElapsed(null);
     const now = Date.now();
@@ -435,7 +440,13 @@ export default function App() {
 
           if (eventType && eventData) {
             if (eventType === "step") {
-              setCurrentStep(eventData.step);
+              if (eventData.step) setCurrentStep(eventData.step);
+              if (eventData.detail) {
+                setStepDetails((prev) => ({
+                  ...prev,
+                  [eventData.step]: eventData.detail,
+                }));
+              }
             } else if (eventType === "log") {
               setLogs((prev) => [...prev, eventData.text]);
             } else if (eventType === "done") {
@@ -508,6 +519,7 @@ export default function App() {
           {(loading || logs.length > 0) && startTime && (
             <PipelineProgress
               currentStep={currentStep}
+              stepDetails={stepDetails}
               logs={logs}
               startTime={startTime}
               isError={!!error}
