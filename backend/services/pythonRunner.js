@@ -51,12 +51,19 @@ function runPipeline(videoUrl, numClips, onProgress) {
       },
     });
 
-    let stderrBuf = "";
+    let lineBuf = "";
 
     proc.stdout.on("data", (d) => {
-      const line = d.toString();
-      process.stdout.write(`[python] ${line}`);
-      if (onProgress) onProgress(line);
+      lineBuf += d.toString();
+      const lines = lineBuf.split("\n");
+      lineBuf = lines.pop() || "";
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed) {
+          process.stdout.write(`[python] ${trimmed}\n`);
+          if (onProgress) onProgress(trimmed);
+        }
+      }
     });
 
     proc.stderr.on("data", (d) => {

@@ -366,6 +366,12 @@ export default function App() {
   const [error, setError] = useState(null);
   const [totalElapsed, setTotalElapsed] = useState(null);
   const [youtubeConnected, setYoutubeConnected] = useState(false);
+  const [uploadState, setUploadState] = useState(null); // null | 'uploading' | 'done' | 'error'
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadFilename, setUploadFilename] = useState("");
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef(null);
+  const uploadedPathRef = useRef(null);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/youtube/status`, { credentials: "include" })
@@ -379,11 +385,69 @@ export default function App() {
     [result]
   );
 
+  async function handleUpload(file) {
+    if (!file) return;
+    setUploadState("uploading");
+    setUploadProgress(0);
+    setUploadFilename(file.name);
+    setError(null);
+    uploadedPathRef.current = null;
+
+    const formData = new FormData();
+    formData.append("video", file);
+
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${API_BASE}/api/upload`);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          setUploadProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          const data = JSON.parse(xhr.responseText);
+          uploadedPathRef.current = data.localPath;
+          setUploadState("done");
+          setVideoUrl(data.localPath);
+          resolve(data.localPath);
+        } else {
+          const err = JSON.parse(xhr.responseText || "{}").error || "Upload failed";
+          setUploadState("error");
+          setError(err);
+          reject(new Error(err));
+        }
+      };
+      xhr.onerror = () => {
+        setUploadState("error");
+        setError("Upload failed — check that the backend is running.");
+        reject(new Error("Upload failed"));
+      };
+      xhr.send(formData);
+    });
+  }
+
+  function handleDropZoneClick() {
+    fileInputRef.current?.click();
+  }
+
+  function handleFileChange(e) {
+    const file = e.target.files?.[0];
+    if (file) handleUpload(file);
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleUpload(file);
+  }
+
   async function handleGenerate(e) {
     e.preventDefault();
     const urlToUse = videoUrl.trim();
     if (!urlToUse) {
-      setError("Please paste a valid YouTube URL first.");
+      setError("Please paste a YouTube URL or upload a video file first.");
       return;
     }
 
@@ -500,12 +564,13 @@ export default function App() {
               type="text"
               placeholder="https://www.youtube.com/watch?v=…"
               value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              required
+              onChange={(e) => { setVideoUrl(e.target.value); setUploadState(null); }}
+              disabled={loading}
             />
             <select
               value={numClips}
               onChange={(e) => setNumClips(e.target.value)}
+              disabled={loading}
             >
               {[2, 3, 4, 5].map((n) => (
                 <option key={n} value={n}>
@@ -513,10 +578,69 @@ export default function App() {
                 </option>
               ))}
             </select>
-            <button type="submit" disabled={loading}>
+            <button type="submit" disabled={loading || uploadState === "uploading"}>
               {loading ? "Working…" : "Generate"}
             </button>
           </form>
+
+          {/* ─── Upload Drop Zone ─────────────────────────────── */}
+          <div className="upload-divider"><span>or upload a local video</span></div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm,video/x-m4v,.mp4,.mov,.avi,.mkv,.webm,.m4v"
+            style={{ display: "none" }}
+            onChange={handleFileChange}
+          />
+
+          <div
+            id="upload-drop-zone"
+            className={`upload-dropzone ${
+              dragOver ? "upload-dropzone--drag" : ""
+            } ${
+              uploadState === "done" ? "upload-dropzone--done" : ""
+            } ${
+              uploadState === "uploading" ? "upload-dropzone--uploading" : ""
+            }`}
+            onClick={uploadState !== "uploading" ? handleDropZoneClick : undefined}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+          >
+            {uploadState === "uploading" && (
+              <div className="upload-dropzone-content">
+                <div className="upload-spinner" />
+                <div className="upload-dropzone-label">Uploading {uploadFilename}…</div>
+                <div className="upload-progress-bar-wrap">
+                  <div className="upload-progress-bar-fill" style={{ width: `${uploadProgress}%` }} />
+                </div>
+                <div className="upload-progress-pct">{uploadProgress}%</div>
+              </div>
+            )}
+            {uploadState === "done" && (
+              <div className="upload-dropzone-content">
+                <span className="upload-done-icon">✓</span>
+                <div className="upload-dropzone-label">{uploadFilename}</div>
+                <div className="upload-dropzone-sublabel">Ready — click Generate above!</div>
+              </div>
+            )}
+            {uploadState === "error" && (
+              <div className="upload-dropzone-content">
+                <span className="upload-error-icon">✕</span>
+                <div className="upload-dropzone-label">Upload failed. Click to retry.</div>
+              </div>
+            )}
+            {(!uploadState) && (
+              <div className="upload-dropzone-content">
+                <svg className="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+                <div className="upload-dropzone-label">Drop a video or <span className="upload-link">click to browse</span></div>
+                <div className="upload-dropzone-sublabel">MP4, MOV, AVI, MKV, WebM · up to 4 GB</div>
+              </div>
+            )}
+          </div>
 
           {(loading || logs.length > 0) && startTime && (
             <PipelineProgress

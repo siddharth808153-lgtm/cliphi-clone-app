@@ -160,6 +160,125 @@ main {
 }
 
 /* ================================================================== */
+/*  Upload Drop Zone                                                   */
+/* ================================================================== */
+.upload-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 20px 0 16px;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+.upload-divider::before,
+.upload-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--panel-border);
+}
+
+.upload-dropzone {
+  border: 1.5px dashed var(--panel-border);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  background: transparent;
+}
+.upload-dropzone:hover {
+  border-color: rgba(255, 90, 54, 0.4);
+  background: rgba(255, 90, 54, 0.04);
+}
+.upload-dropzone--drag {
+  border-color: var(--accent);
+  background: rgba(255, 90, 54, 0.08);
+}
+.upload-dropzone--done {
+  border-color: rgba(52, 224, 161, 0.4);
+  background: rgba(52, 224, 161, 0.04);
+  cursor: default;
+}
+.upload-dropzone--uploading {
+  cursor: default;
+  border-color: rgba(255, 90, 54, 0.25);
+}
+
+.upload-dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.upload-icon {
+  width: 36px;
+  height: 36px;
+  color: var(--text-dim);
+}
+
+.upload-dropzone-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.upload-dropzone-sublabel {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.upload-link {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.upload-done-icon {
+  font-size: 1.8rem;
+  color: var(--accent-2);
+  font-weight: 700;
+}
+
+.upload-error-icon {
+  font-size: 1.8rem;
+  color: #ff5a5a;
+  font-weight: 700;
+}
+
+.upload-spinner {
+  width: 28px;
+  height: 28px;
+  border: 2.5px solid rgba(255, 90, 54, 0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.upload-progress-bar-wrap {
+  width: 220px;
+  height: 5px;
+  background: var(--panel-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.upload-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+.upload-progress-pct {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ================================================================== */
 /*  Pipeline Progress — Real-time step tracker                        */
 /* ================================================================== */
 .pipeline-progress {
