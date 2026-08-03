@@ -171,8 +171,10 @@ function PipelineProgress({ currentStep, stepDetails = {}, logs, startTime, isEr
                 <div className="pipeline-step-header">
                   <span className="pipeline-step-icon">{step.icon}</span>
                   <span className="pipeline-step-label">{step.label}</span>
-                  {stepDetails[step.id] && status === "active" && (
-                    <span className="pipeline-step-badge">{stepDetails[step.id]}</span>
+                  {stepDetails[step.id] && (status === "active" || status === "done") && (
+                    <span className={`pipeline-step-badge ${status === "done" ? "pipeline-step-badge--done" : ""}`}>
+                      {stepDetails[step.id]}
+                    </span>
                   )}
                   {status === "done" && (
                     <span className="pipeline-step-time">✓</span>

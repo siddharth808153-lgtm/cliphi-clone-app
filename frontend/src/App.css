@@ -294,6 +294,13 @@ main {
   box-shadow: 0 0 10px rgba(255, 90, 54, 0.15);
 }
 
+.pipeline-step-badge--done {
+  background: rgba(52, 224, 161, 0.12);
+  color: var(--accent-2);
+  border: 1px solid rgba(52, 224, 161, 0.25);
+  box-shadow: none;
+}
+
 .pipeline-step-dot {
   width: 10px;
   height: 10px;
