@@ -61,7 +61,7 @@ function formatDuration(seconds) {
 }
 
 /* ─── Pipeline Progress Component ─────────────────────────────────── */
-function PipelineProgress({ currentStep, stepDetails = {}, stepLabels = {}, logs, startTime, isError, hasEnded }) {
+function PipelineProgress({ currentStep, stepDetails = {}, stepLabels = {}, isLocalInput = false, logs, startTime, isError, hasEnded }) {
   const logsEndRef = useRef(null);
   const [elapsed, setElapsed] = useState(0);
   const [showLogs, setShowLogs] = useState(true);
@@ -148,12 +148,20 @@ function PipelineProgress({ currentStep, stepDetails = {}, stepLabels = {}, logs
           else if (i < currentIndex) status = "done";
           else if (i === currentIndex) status = isError ? "error" : "active";
 
-          // Use dynamic label override from SSE if available
-          const displayLabel = stepLabels[step.id] || step.label;
-          // Use dynamic description based on label
-          const isLocalFile = displayLabel === "Using uploaded video";
-          const displayDesc = isLocalFile
-            ? "Processing local video file directly"
+          const isDownloadStep = step.id === "download";
+          const currentLabel = stepLabels[step.id] || "";
+          const isLocal = isDownloadStep && (
+            isLocalInput ||
+            currentLabel.toLowerCase().includes("local") ||
+            currentLabel.toLowerCase().includes("upload")
+          );
+
+          const displayIcon = isLocal ? "📁" : step.icon;
+          const displayLabel = isLocal
+            ? (stepLabels[step.id] || "Using local video")
+            : (stepLabels[step.id] || step.label);
+          const displayDesc = isLocal
+            ? "Processing video directly from disk (no download needed)"
             : step.description;
 
           return (
@@ -177,7 +185,7 @@ function PipelineProgress({ currentStep, stepDetails = {}, stepLabels = {}, logs
               </div>
               <div className="pipeline-step-content">
                 <div className="pipeline-step-header">
-                  <span className="pipeline-step-icon">{step.icon}</span>
+                  <span className="pipeline-step-icon">{displayIcon}</span>
                   <span className="pipeline-step-label">{displayLabel}</span>
                   {stepDetails[step.id] && (status === "active" || status === "done") && (
                     <span className={`pipeline-step-badge ${status === "done" ? "pipeline-step-badge--done" : ""}`}>
@@ -509,6 +517,12 @@ export default function App() {
       .catch(() => {});
   }, []);
 
+  const isLocalInput = useMemo(() => {
+    const url = (videoUrl || "").trim();
+    if (!url) return false;
+    return !url.startsWith("http://") && !url.startsWith("https://");
+  }, [videoUrl]);
+
   const duration = useMemo(
     () => result?.transcript?.duration || 0,
     [result]
@@ -585,8 +599,8 @@ export default function App() {
     setResult(null);
     setLoading(true);
     setCurrentStep("download");
-    setStepDetails({});
-    setStepLabels({});
+    setStepDetails(isLocalInput ? { download: "Reading from disk..." } : {});
+    setStepLabels(isLocalInput ? { download: "Using local video" } : {});
     setLogs(["🚀 Initializing video generation pipeline..."]);
     setTotalElapsed(null);
     const now = Date.now();
@@ -801,6 +815,7 @@ export default function App() {
               currentStep={currentStep}
               stepDetails={stepDetails}
               stepLabels={stepLabels}
+              isLocalInput={isLocalInput}
               logs={logs}
               startTime={startTime}
               isError={!!error}
