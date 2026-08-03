@@ -511,7 +511,7 @@ export default function App() {
               logs={logs}
               startTime={startTime}
               isError={!!error}
-              hasEnded={!loading}
+              hasEnded={!!result}
             />
           )}
 

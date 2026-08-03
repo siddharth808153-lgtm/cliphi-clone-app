@@ -130,7 +130,7 @@ def _reframe_vertical(in_path: str, out_path: str, aspect_ratio: str) -> str:
         "ffmpeg", "-y", "-loglevel", "error",
         "-i", silent_path,
         "-i", in_path,
-        "-c:v", "copy",
+        "-c:v", "libx264", "-preset", "ultrafast", "-crf", "20",
         "-c:a", "aac", "-b:a", "128k",
         "-map", "0:v:0", "-map", "1:a:0?",
         "-shortest",
