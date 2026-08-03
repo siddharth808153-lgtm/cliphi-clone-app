@@ -187,9 +187,11 @@ function PipelineProgress({ currentStep, stepDetails = {}, stepLabels = {}, isLo
                 <div className="pipeline-step-header">
                   <span className="pipeline-step-icon">{displayIcon}</span>
                   <span className="pipeline-step-label">{displayLabel}</span>
-                  {stepDetails[step.id] && (status === "active" || status === "done") && (
+                  {(stepDetails[step.id] || (status === "done" && isDownloadStep)) && (status === "active" || status === "done") && (
                     <span className={`pipeline-step-badge ${status === "done" ? "pipeline-step-badge--done" : ""}`}>
-                      {stepDetails[step.id]}
+                      {status === "done" && isDownloadStep
+                        ? "File loaded ✓"
+                        : stepDetails[step.id]}
                     </span>
                   )}
                   {status === "done" && (
