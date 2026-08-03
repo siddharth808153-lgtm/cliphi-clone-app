@@ -163,19 +163,27 @@ def transcribe_local(media_path: str, language: Optional[str] = None) -> Dict:
 
     segments_iter, info = model.transcribe(**transcribe_kwargs)
 
+    # For fast part-wise generation on long files (> 30 min / 1800s), cap initial window to 1800s
+    MAX_FAST_TRANSCRIBE_SEC = 1800  # 30 minutes
     segments = []
     total_dur = float(getattr(info, "duration", 0.0))
+    effective_dur = min(total_dur, MAX_FAST_TRANSCRIBE_SEC) if total_dur > 0 else MAX_FAST_TRANSCRIBE_SEC
     last_logged_s = 0.0
+
     for s in segments_iter:
         segments.append({
             "start": float(s.start),
             "end": float(s.end),
             "text": (s.text or "").strip(),
         })
-        if total_dur > 0 and (s.end - last_logged_s >= 25):
+        if effective_dur > 0 and (s.end - last_logged_s >= 25):
             last_logged_s = s.end
-            pct = min(100, int((s.end / total_dur) * 100))
-            print(f"[transcribe/local] progress: {s.end:.0f}/{total_dur:.0f}s ({pct}%)", flush=True)
+            pct = min(100, int((s.end / effective_dur) * 100))
+            print(f"[transcribe/local] progress: {s.end:.0f}/{effective_dur:.0f}s ({pct}%)", flush=True)
+
+        if s.end >= MAX_FAST_TRANSCRIBE_SEC:
+            print(f"[transcribe/local] fast mode: reached 30-min window limit ({s.end:.0f}s), proceeding to highlights!", flush=True)
+            break
 
     duration = total_dur or (segments[-1]["end"] if segments else 0.0)
     print(f"[transcribe/local] {len(segments)} segments, {duration:.0f}s of audio", flush=True)
