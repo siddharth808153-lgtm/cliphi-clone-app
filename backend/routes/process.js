@@ -53,6 +53,10 @@ router.post("/generate", (req, res) => {
     if (line.includes("downloading video:")) {
       const match = line.match(/downloading video:\s*(.*)/i);
       if (match) detail = match[1].trim();
+    } else if (line.includes("checking link accessibility")) {
+      detail = "verifying link & metadata...";
+    } else if (line.includes("reusing cached download")) {
+      detail = "100% (cached source)";
     } else if (line.includes("[clip/local]")) {
       const match = line.match(/\[clip\/local\]\s*(\d+\/\d+:\s*.*)/i);
       if (match) detail = match[1].trim();

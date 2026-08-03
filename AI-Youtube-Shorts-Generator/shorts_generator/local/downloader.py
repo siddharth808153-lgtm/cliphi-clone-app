@@ -155,7 +155,7 @@ def download_youtube_local(video_url: str, fmt: str = "720", out_dir: Optional[s
 
     print(f"[download/local] downloading {video_url} @ {fmt}p...", flush=True)
 
-    last_reported = -10
+    last_reported = -5
 
     def _progress_hook(d):
         nonlocal last_reported
@@ -164,7 +164,7 @@ def download_youtube_local(video_url: str, fmt: str = "720", out_dir: Optional[s
             downloaded = d.get("downloaded_bytes", 0)
             if total > 0:
                 pct = int((downloaded / total) * 100)
-                if pct >= last_reported + 10 or pct == 100:
+                if pct >= last_reported + 2 or pct == 100:
                     last_reported = pct
                     mb_dn = downloaded / (1024 * 1024)
                     mb_tot = total / (1024 * 1024)
