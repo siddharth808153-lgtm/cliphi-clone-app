@@ -120,13 +120,15 @@ def call_ollama_llm(prompt: str) -> str:
 
 def call_local_llm(prompt: str) -> str:
     """Dispatch to the configured local LLM provider."""
-    provider = (LLM_PROVIDER or "openai").strip().lower()
-    if provider == "openai":
-        return call_openai_llm(prompt)
+    provider = (LLM_PROVIDER or "heuristic").strip().lower()
+    if provider == "heuristic" or provider == "local" or provider == "none" or provider == "cpu":
+        raise RuntimeError("LLM_PROVIDER=heuristic requested: using smart CPU transcript heuristic")
     if provider == "gemini":
         return call_gemini_llm(prompt)
     if provider == "ollama":
         return call_ollama_llm(prompt)
+    if provider == "openai":
+        return call_openai_llm(prompt)
     raise RuntimeError(
-        f"Unknown LLM_PROVIDER={provider!r}. Use 'openai', 'gemini', or 'ollama'."
+        f"Unknown LLM_PROVIDER={provider!r}. Use 'heuristic', 'gemini', 'ollama', or 'openai'."
     )
