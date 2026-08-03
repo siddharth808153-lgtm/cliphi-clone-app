@@ -156,12 +156,12 @@ function PipelineProgress({ currentStep, stepDetails = {}, stepLabels = {}, isLo
             currentLabel.toLowerCase().includes("upload")
           );
 
-          const displayIcon = isLocal ? "📁" : step.icon;
+          const displayIcon = isLocal ? (status === "done" ? "✓" : "📁") : step.icon;
           const displayLabel = isLocal
-            ? (stepLabels[step.id] || "Using local video")
+            ? (status === "done" ? "Local video file loaded" : (stepLabels[step.id] || "Using local video"))
             : (stepLabels[step.id] || step.label);
           const displayDesc = isLocal
-            ? "Processing video directly from disk (no download needed)"
+            ? (status === "done" ? "Source video file is ready for processing" : "Processing video directly from disk (no download needed)")
             : step.description;
 
           return (
