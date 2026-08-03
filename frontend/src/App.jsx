@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
 
@@ -361,6 +361,109 @@ function ClipCard({ clip, index, youtubeConnected, onConnectYoutube }) {
   );
 }
 
+/* ─── Video Library Sidebar ─────────────────────────────── */
+function VideoLibrary({ refreshTrigger }) {
+  const [videos, setVideos] = useState([]);
+  const [deleting, setDeleting] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  const fetchVideos = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/videos`);
+      const data = await res.json();
+      setVideos(data.videos || []);
+    } catch {
+      setVideos([]);
+    }
+  }, []);
+
+  useEffect(() => { fetchVideos(); }, [fetchVideos, refreshTrigger]);
+
+  async function handleDelete(filename) {
+    if (confirmDelete !== filename) {
+      setConfirmDelete(filename);
+      setTimeout(() => setConfirmDelete(null), 3000);
+      return;
+    }
+    setDeleting(filename);
+    setConfirmDelete(null);
+    try {
+      await fetch(`${API_BASE}/api/videos/${encodeURIComponent(filename)}`, { method: "DELETE" });
+      setVideos((prev) => prev.filter((v) => v.filename !== filename));
+    } catch (err) {
+      console.error("Delete failed:", err);
+    } finally {
+      setDeleting(null);
+    }
+  }
+
+  const totalSize = videos.reduce((acc, v) => acc + v.size, 0);
+  function fmtTotal(bytes) {
+    if (bytes >= 1024 * 1024 * 1024) return (bytes / 1024 / 1024 / 1024).toFixed(1) + " GB";
+    if (bytes >= 1024 * 1024) return (bytes / 1024 / 1024).toFixed(0) + " MB";
+    return (bytes / 1024).toFixed(0) + " KB";
+  }
+
+  return (
+    <aside className="video-library">
+      <div className="vlib-header">
+        <span className="vlib-title">📂 Video Library</span>
+        <span className="vlib-meta">
+          {videos.length} file{videos.length !== 1 ? "s" : ""} &middot; {fmtTotal(totalSize)}
+        </span>
+        <button className="vlib-refresh" onClick={fetchVideos} title="Refresh">↺</button>
+      </div>
+
+      {videos.length === 0 ? (
+        <div className="vlib-empty">
+          <span className="vlib-empty-icon">📼</span>
+          <p>No source videos yet.<br />Download a YouTube video or upload one!</p>
+        </div>
+      ) : (
+        <div className="vlib-list">
+          {videos.map((v) => (
+            <div key={v.filename} className="vlib-item">
+              <video
+                className="vlib-thumb"
+                src={`${API_BASE}${v.url}`}
+                muted
+                preload="metadata"
+                onMouseOver={(e) => e.currentTarget.play()}
+                onMouseOut={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+              />
+              <div className="vlib-info">
+                <div className="vlib-filename" title={v.filename}>
+                  {v.filename.replace(/^(source_|upload_)/, "").replace(/_\d{13}/, "")}
+                </div>
+                <div className="vlib-badges">
+                  <span className={`vlib-type vlib-type--${v.type}`}>
+                    {v.type === "uploaded" ? "⬆ uploaded" : "⬇ downloaded"}
+                  </span>
+                  <span className="vlib-size">{v.sizeLabel}</span>
+                </div>
+              </div>
+              <button
+                className={`vlib-delete ${
+                  confirmDelete === v.filename ? "vlib-delete--confirm" : ""
+                }`}
+                disabled={deleting === v.filename}
+                onClick={() => handleDelete(v.filename)}
+                title={confirmDelete === v.filename ? "Click again to confirm delete" : "Delete file"}
+              >
+                {deleting === v.filename
+                  ? "⏳"
+                  : confirmDelete === v.filename
+                  ? "⚠️ Sure?"
+                  : "🗑️"}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </aside>
+  );
+}
+
 /* ─── Main App ────────────────────────────────────────────────────── */
 export default function App() {
   const [videoUrl, setVideoUrl] = useState("");
@@ -379,6 +482,7 @@ export default function App() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadFilename, setUploadFilename] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  const [libRefresh, setLibRefresh] = useState(0);
   const fileInputRef = useRef(null);
   const uploadedPathRef = useRef(null);
 
@@ -419,6 +523,7 @@ export default function App() {
           uploadedPathRef.current = data.localPath;
           setUploadState("done");
           setVideoUrl(data.localPath);
+          setLibRefresh((n) => n + 1); // refresh library
           resolve(data.localPath);
         } else {
           const err = JSON.parse(xhr.responseText || "{}").error || "Upload failed";
@@ -545,6 +650,7 @@ export default function App() {
       setError(err.message);
     } finally {
       setLoading(false);
+      setLibRefresh((n) => n + 1); // refresh library to show new downloads
     }
   }
 
@@ -567,8 +673,10 @@ export default function App() {
         </button>
       </header>
 
-      <main>
-        <section className="intake">
+      <main className="app-main">
+        <div className="app-content">
+          <section className="intake">
+
           <h1>Paste a link. Get your shorts.</h1>
           <p className="subtitle">
             Runs the highlight-detection pipeline on your own machine, no
@@ -704,6 +812,8 @@ export default function App() {
             </div>
           </section>
         )}
+        </div>
+        <VideoLibrary refreshTrigger={libRefresh} />
       </main>
     </div>
   );

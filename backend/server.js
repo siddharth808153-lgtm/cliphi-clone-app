@@ -7,6 +7,7 @@ const session = require("express-session");
 const processRoutes = require("./routes/process");
 const youtubeRoutes = require("./routes/youtube");
 const uploadRoutes = require("./routes/upload");
+const videosRoutes = require("./routes/videos");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -36,6 +37,7 @@ app.use("/clips", express.static(outputDir));
 
 app.use("/api", processRoutes);
 app.use("/api", uploadRoutes);
+app.use("/api", videosRoutes);
 app.use("/auth", youtubeRoutes);
 app.use("/api", youtubeRoutes);
 
