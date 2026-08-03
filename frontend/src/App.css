@@ -1073,10 +1073,95 @@ main {
   transition: background 0.15s, border-color 0.15s, transform 0.1s;
   white-space: nowrap;
 }
-.vlib-use:hover {
-  background: rgba(255, 90, 54, 0.2);
+.vlib-seo-upload {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(255, 90, 54, 0.2), rgba(167, 139, 250, 0.2));
+  border: 1px solid rgba(255, 90, 54, 0.4);
+  color: #ff9d7d;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.vlib-seo-upload:hover {
+  background: linear-gradient(135deg, rgba(255, 90, 54, 0.4), rgba(167, 139, 250, 0.4));
   border-color: var(--accent);
+  color: #fff;
   transform: scale(1.04);
+}
+
+/* Modal overlay & card */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-card {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  animation: modal-slide 0.2s ease-out;
+}
+
+@keyframes modal-slide {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.modal-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.modal-close:hover {
+  color: var(--text);
+}
+
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-video {
+  width: 100%;
+  max-height: 240px;
+  border-radius: 8px;
+  background: #000;
+  object-fit: contain;
 }
 .vlib-use--selected {
   background: rgba(52, 224, 161, 0.15) !important;

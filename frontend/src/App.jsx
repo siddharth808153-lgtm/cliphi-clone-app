@@ -407,8 +407,114 @@ function ClipCard({ clip, index, youtubeConnected, onConnectYoutube }) {
   );
 }
 
+/* ─── Clip Upload Modal ───────────────────────────────────────────── */
+function ClipUploadModal({ video, youtubeConnected, onConnectYoutube, onClose }) {
+  const defaultTitle = `Part 1 - ${video.filename.replace(/\.mp4$/i, "")}`;
+  const [title, setTitle] = useState(defaultTitle);
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState("idle");
+  const [resultUrl, setResultUrl] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
+
+  async function handleGenerateSeo() {
+    setIsGeneratingSeo(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/youtube/generate-seo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, text: video.filename }),
+      });
+      const data = await res.json();
+      if (data.title) setTitle(data.title);
+      if (data.description) setDescription(data.description);
+    } catch (err) {
+      console.error("SEO generation failed:", err);
+    } finally {
+      setIsGeneratingSeo(false);
+    }
+  }
+
+  async function handleUpload() {
+    if (!youtubeConnected) {
+      onConnectYoutube();
+      return;
+    }
+    setStatus("uploading");
+    setErrorMsg(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/youtube/upload`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: video.filename, title, description }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      setResultUrl(data.url);
+      setStatus("done");
+    } catch (err) {
+      setErrorMsg(err.message);
+      setStatus("error");
+    }
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <span className="modal-title">✨ AI Auto-SEO & YouTube Upload</span>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <video src={`${API_BASE}${video.url}`} controls className="modal-video" />
+          
+          <button
+            type="button"
+            className="ai-seo-btn"
+            onClick={handleGenerateSeo}
+            disabled={isGeneratingSeo}
+          >
+            {isGeneratingSeo ? "Generating SEO Title & Tags…" : "✨ AI Auto-SEO (Title, Description & Tags)"}
+          </button>
+
+          <input
+            className="clip-title-input"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Short Title..."
+          />
+          <textarea
+            className="clip-desc-input"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={4}
+            placeholder="Short Description & Hashtags..."
+          />
+          <button
+            className={`upload-btn upload-btn--${status}`}
+            onClick={handleUpload}
+            disabled={status === "uploading" || status === "done"}
+          >
+            {status === "idle" && (youtubeConnected ? "Upload to YouTube" : "Connect YouTube to upload")}
+            {status === "uploading" && "Uploading to YouTube…"}
+            {status === "done" && "Uploaded Successfully ✓"}
+            {status === "error" && "Retry Upload"}
+          </button>
+          {status === "done" && resultUrl && (
+            <a className="clip-link" href={resultUrl} target="_blank" rel="noreferrer">
+              View on YouTube Shorts →
+            </a>
+          )}
+          {status === "error" && <p className="clip-error">{errorMsg}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Video Library Sidebar ─────────────────────────────── */
-function VideoLibrary({ refreshTrigger, onUse }) {
+function VideoLibrary({ refreshTrigger, onUse, onUploadClip }) {
   const [videos, setVideos] = useState([]);
   const [deleting, setDeleting] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -492,6 +598,15 @@ function VideoLibrary({ refreshTrigger, onUse }) {
                 </div>
               </div>
               <div className="vlib-actions">
+                {v.type === "clip" && (
+                  <button
+                    className="vlib-seo-upload"
+                    onClick={() => onUploadClip && onUploadClip(v)}
+                    title="AI Auto-SEO & Upload to YouTube"
+                  >
+                    ✨ Upload
+                  </button>
+                )}
                 <button
                   className={`vlib-use ${selectedFilename === v.filename ? "vlib-use--selected" : ""}`}
                   onClick={() => {
@@ -545,6 +660,7 @@ export default function App() {
   const [dragOver, setDragOver] = useState(false);
   const [libRefresh, setLibRefresh] = useState(0);
   const [channelAnalytics, setChannelAnalytics] = useState(null);
+  const [activeUploadVideo, setActiveUploadVideo] = useState(null);
   const fileInputRef = useRef(null);
   const uploadedPathRef = useRef(null);
   const intakeRef = useRef(null);
@@ -935,8 +1051,21 @@ export default function App() {
           </section>
         )}
         </div>
-        <VideoLibrary refreshTrigger={libRefresh} onUse={handleUseVideo} />
+        <VideoLibrary
+          refreshTrigger={libRefresh}
+          onUse={handleUseVideo}
+          onUploadClip={(v) => setActiveUploadVideo(v)}
+        />
       </main>
+
+      {activeUploadVideo && (
+        <ClipUploadModal
+          video={activeUploadVideo}
+          youtubeConnected={youtubeConnected}
+          onConnectYoutube={connectYoutube}
+          onClose={() => setActiveUploadVideo(null)}
+        />
+      )}
     </div>
   );
 }
