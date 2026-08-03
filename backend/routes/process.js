@@ -67,6 +67,8 @@ router.post("/generate", (req, res) => {
       detail = "verifying link & metadata...";
     } else if (line.includes("reusing cached download")) {
       detail = "100% (cached source)";
+    } else if (line.includes("extracting lightweight 16kHz audio")) {
+      detail = "Extracting audio snippet...";
     } else if (line.includes("[transcribe/local] progress:")) {
       const match = line.match(/progress:\s*(.*)/i);
       if (match) detail = match[1].trim();

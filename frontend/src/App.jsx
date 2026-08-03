@@ -705,6 +705,13 @@ export default function App() {
                   const newIdx = STEP_ORDER[eventData.step] !== undefined ? STEP_ORDER[eventData.step] : 0;
                   return newIdx >= prevIdx ? eventData.step : prev;
                 });
+                if (eventData.step === "transcribe") {
+                  setStepDetails((prev) => ({
+                    ...prev,
+                    download: "File loaded ✓",
+                    transcribe: prev.transcribe || "Extracting audio snippet...",
+                  }));
+                }
               }
               if (eventData.label) {
                 setStepLabels((prev) => ({
