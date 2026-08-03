@@ -27,7 +27,9 @@ router.post("/generate", (req, res) => {
 
   // Helper to send an SSE event
   function sendEvent(eventName, data) {
-    res.write(`event: ${eventName}\ndata: ${JSON.stringify(data)}\n\n`);
+    if (!res.writableEnded) {
+      res.write(`event: ${eventName}\ndata: ${JSON.stringify(data)}\n\n`);
+    }
   }
 
   // Map Python pipeline [tag] prefixes to user-friendly pipeline steps

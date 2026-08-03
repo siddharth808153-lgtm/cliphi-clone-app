@@ -412,32 +412,39 @@ export default function App() {
 
         buffer += decoder.decode(value, { stream: true });
 
-        // Parse SSE events from the buffer
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || ""; // keep incomplete line in buffer
+        // Parse SSE event blocks (events in SSE spec are separated by double newline \n\n)
+        const blocks = buffer.split("\n\n");
+        buffer = blocks.pop() || ""; // Keep incomplete block in buffer
 
-        let eventType = null;
-        for (const line of lines) {
-          if (line.startsWith("event: ")) {
-            eventType = line.slice(7).trim();
-          } else if (line.startsWith("data: ") && eventType) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              if (eventType === "step") {
-                setCurrentStep(data.step);
-              } else if (eventType === "log") {
-                setLogs((prev) => [...prev, data.text]);
-              } else if (eventType === "done") {
-                setTotalElapsed(data.elapsed);
-                setResult(data);
-                setLoading(false);
-              } else if (eventType === "error") {
-                throw new Error(data.error);
+        for (const block of blocks) {
+          const lines = block.split("\n");
+          let eventType = null;
+          let eventData = null;
+
+          for (const line of lines) {
+            if (line.startsWith("event: ")) {
+              eventType = line.slice(7).trim();
+            } else if (line.startsWith("data: ")) {
+              try {
+                eventData = JSON.parse(line.slice(6));
+              } catch (e) {
+                // Ignore parse errors for partial chunks
               }
-            } catch (parseErr) {
-              if (eventType === "error") throw parseErr;
             }
-            eventType = null;
+          }
+
+          if (eventType && eventData) {
+            if (eventType === "step") {
+              setCurrentStep(eventData.step);
+            } else if (eventType === "log") {
+              setLogs((prev) => [...prev, eventData.text]);
+            } else if (eventType === "done") {
+              setTotalElapsed(eventData.elapsed);
+              setResult(eventData);
+              setError(null);
+            } else if (eventType === "error") {
+              throw new Error(eventData.error || eventData.message || "Generation failed");
+            }
           }
         }
       }
