@@ -362,7 +362,7 @@ function ClipCard({ clip, index, youtubeConnected, onConnectYoutube }) {
 }
 
 /* ─── Video Library Sidebar ─────────────────────────────── */
-function VideoLibrary({ refreshTrigger }) {
+function VideoLibrary({ refreshTrigger, onUse }) {
   const [videos, setVideos] = useState([]);
   const [deleting, setDeleting] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -433,29 +433,40 @@ function VideoLibrary({ refreshTrigger }) {
               />
               <div className="vlib-info">
                 <div className="vlib-filename" title={v.filename}>
-                  {v.filename.replace(/^(source_|upload_)/, "").replace(/_\d{13}/, "")}
+                  {v.filename.replace(/^(source_|upload_|short_)/, "").replace(/_\d{13}/, "")}
                 </div>
                 <div className="vlib-badges">
                   <span className={`vlib-type vlib-type--${v.type}`}>
-                    {v.type === "uploaded" ? "⬆ uploaded" : "⬇ downloaded"}
+                    {v.type === "uploaded" ? "⬆ uploaded"
+                      : v.type === "clip" ? "✂️ clip"
+                      : "⬇ downloaded"}
                   </span>
                   <span className="vlib-size">{v.sizeLabel}</span>
                 </div>
               </div>
-              <button
-                className={`vlib-delete ${
-                  confirmDelete === v.filename ? "vlib-delete--confirm" : ""
-                }`}
-                disabled={deleting === v.filename}
-                onClick={() => handleDelete(v.filename)}
-                title={confirmDelete === v.filename ? "Click again to confirm delete" : "Delete file"}
-              >
-                {deleting === v.filename
-                  ? "⏳"
-                  : confirmDelete === v.filename
-                  ? "⚠️ Sure?"
-                  : "🗑️"}
-              </button>
+              <div className="vlib-actions">
+                <button
+                  className="vlib-use"
+                  onClick={() => onUse && onUse(v.localPath, v.filename)}
+                  title="Use this video as input for clip generation"
+                >
+                  ▶ Use
+                </button>
+                <button
+                  className={`vlib-delete ${
+                    confirmDelete === v.filename ? "vlib-delete--confirm" : ""
+                  }`}
+                  disabled={deleting === v.filename}
+                  onClick={() => handleDelete(v.filename)}
+                  title={confirmDelete === v.filename ? "Click again to confirm delete" : "Delete file"}
+                >
+                  {deleting === v.filename
+                    ? "⏳"
+                    : confirmDelete === v.filename
+                    ? "⚠️ Sure?"
+                    : "🗑️"}
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -485,6 +496,7 @@ export default function App() {
   const [libRefresh, setLibRefresh] = useState(0);
   const fileInputRef = useRef(null);
   const uploadedPathRef = useRef(null);
+  const intakeRef = useRef(null);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/youtube/status`, { credentials: "include" })
@@ -658,6 +670,17 @@ export default function App() {
     window.location.href = `${API_BASE}/auth/google`;
   }
 
+  function handleUseVideo(localPath, filename) {
+    setVideoUrl(localPath);
+    setUploadState(null);
+    setResult(null);
+    setError(null);
+    // Scroll intake into view and focus the Generate button
+    setTimeout(() => {
+      intakeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  }
+
   return (
     <div className="app">
       <header className="topbar">
@@ -675,7 +698,7 @@ export default function App() {
 
       <main className="app-main">
         <div className="app-content">
-          <section className="intake">
+          <section className="intake" ref={intakeRef}>
 
           <h1>Paste a link. Get your shorts.</h1>
           <p className="subtitle">
@@ -813,7 +836,7 @@ export default function App() {
           </section>
         )}
         </div>
-        <VideoLibrary refreshTrigger={libRefresh} />
+        <VideoLibrary refreshTrigger={libRefresh} onUse={handleUseVideo} />
       </main>
     </div>
   );

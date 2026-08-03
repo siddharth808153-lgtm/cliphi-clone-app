@@ -975,11 +975,41 @@ main {
   background: rgba(52, 224, 161, 0.1);
   color: var(--accent-2);
 }
+.vlib-type--clip {
+  background: rgba(140, 100, 255, 0.12);
+  color: #a78bfa;
+}
 
 .vlib-size {
   font-size: 0.67rem;
   color: var(--text-dim);
   font-family: "JetBrains Mono", monospace;
+}
+
+/* Actions column: Use + Delete stacked vertically */
+.vlib-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.vlib-use {
+  background: rgba(255, 90, 54, 0.1);
+  border: 1px solid rgba(255, 90, 54, 0.25);
+  color: var(--accent);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.vlib-use:hover {
+  background: rgba(255, 90, 54, 0.2);
+  border-color: var(--accent);
+  transform: scale(1.04);
 }
 
 .vlib-delete {

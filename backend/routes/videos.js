@@ -33,8 +33,8 @@ router.get("/videos", (req, res) => {
     .filter((f) => {
       const ext = path.extname(f).toLowerCase();
       if (!videoExts.has(ext)) return false;
-      // Only list source (downloaded) and uploaded files — not generated shorts
-      const isSource = f.startsWith("source_") || f.startsWith("upload_");
+      // List source (downloaded), uploaded files AND generated shorts
+      const isSource = f.startsWith("source_") || f.startsWith("upload_") || f.startsWith("short_");
       return isSource;
     })
     .map((f) => {
@@ -52,7 +52,8 @@ router.get("/videos", (req, res) => {
         sizeLabel: formatSize(size),
         mtime,
         url: `/clips/${encodeURIComponent(f)}`,
-        type: f.startsWith("upload_") ? "uploaded" : "downloaded",
+        localPath: fullPath,
+        type: f.startsWith("upload_") ? "uploaded" : f.startsWith("short_") ? "clip" : "downloaded",
       };
     })
     .sort((a, b) => b.mtime - a.mtime); // newest first
