@@ -64,7 +64,9 @@ router.post("/generate", (req, res) => {
 
   const startTime = Date.now();
 
-  runPipeline(videoUrl, numClips, onProgress)
+  const pipelinePromise = runPipeline(videoUrl, numClips, onProgress);
+
+  pipelinePromise
     .then((result) => {
       // Normalize shorts for the frontend
       const shorts = (result.shorts || []).map((s) => {
@@ -88,7 +90,6 @@ router.post("/generate", (req, res) => {
 
   // Handle client disconnect
   req.on("close", () => {
-    // Client disconnected — pipeline will still run but we stop writing
     res.end();
   });
 });

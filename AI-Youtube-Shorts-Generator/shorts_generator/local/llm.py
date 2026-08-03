@@ -44,10 +44,8 @@ def call_gemini_llm(prompt: str) -> str:
     candidate_models = [
         GEMINI_MODEL,
         "gemini-2.5-flash",
-        "gemini-1.5-flash",
         "gemini-2.0-flash",
-        "gemini-2.5-flash-lite",
-        "gemini-2.0-flash-lite-001",
+        "gemini-2.0-flash-lite",
     ]
     # Deduplicate candidate models while preserving order
     seen = set()
@@ -67,8 +65,9 @@ def call_gemini_llm(prompt: str) -> str:
             )
             return response.text or ""
         except ClientError as e:
-            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
-                print(f"[gemini] model {model_name} hit rate limit / quota, trying next fallback...", flush=True)
+            err_str = str(e)
+            if any(code in err_str for code in ("429", "404", "400", "RESOURCE_EXHAUSTED", "NOT_FOUND")):
+                print(f"[gemini] model {model_name} unavailable ({err_str.splitlines()[0]}), trying next fallback...", flush=True)
                 last_error = e
                 continue
             raise e

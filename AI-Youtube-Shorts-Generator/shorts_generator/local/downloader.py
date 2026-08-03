@@ -87,7 +87,7 @@ def _existing_download(out_dir: str, video_id: str) -> Optional[str]:
     """Return a cached download path if we already have this YouTube id."""
     for ext in (".mp4", ".mkv", ".webm"):
         candidate = os.path.join(out_dir, f"source_{video_id}{ext}")
-        if os.path.exists(candidate):
+        if os.path.exists(candidate) and os.path.getsize(candidate) > 1024:
             return candidate
     return None
 

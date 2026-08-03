@@ -12,7 +12,8 @@ const PYTHON_BIN = process.env.PYTHON_BIN || "python";
  * resulting JSON (transcript + highlights + shorts with local clip paths).
  */
 function runPipeline(videoUrl, numClips, onProgress) {
-  return new Promise((resolve, reject) => {
+  let proc = null;
+  const promise = new Promise((resolve, reject) => {
     if (!PYTHON_PROJECT_DIR) {
       return reject(
         new Error(
@@ -37,9 +38,17 @@ function runPipeline(videoUrl, numClips, onProgress) {
       outputJsonPath,
     ];
 
-    const proc = spawn(PYTHON_BIN, args, {
+    proc = spawn(PYTHON_BIN, args, {
       cwd: PYTHON_PROJECT_DIR,
-      env: { ...process.env, PYTHONUNBUFFERED: "1" },
+      env: {
+        ...process.env,
+        PYTHONUNBUFFERED: "1",
+        MKL_NUM_THREADS: "1",
+        OMP_NUM_THREADS: "1",
+        OPENBLAS_NUM_THREADS: "1",
+        VECLIB_MAXIMUM_THREADS: "1",
+        NUMEXPR_NUM_THREADS: "1",
+      },
     });
 
     let stderrBuf = "";
@@ -85,6 +94,9 @@ function runPipeline(videoUrl, numClips, onProgress) {
       reject(new Error(`Failed to start python process: ${err.message}`));
     });
   });
+
+  promise.getProc = () => proc;
+  return promise;
 }
 
 module.exports = { runPipeline };
