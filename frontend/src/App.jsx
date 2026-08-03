@@ -64,7 +64,7 @@ function formatDuration(seconds) {
 function PipelineProgress({ currentStep, logs, startTime, isError, hasEnded }) {
   const logsEndRef = useRef(null);
   const [elapsed, setElapsed] = useState(0);
-  const [showLogs, setShowLogs] = useState(false);
+  const [showLogs, setShowLogs] = useState(true);
 
   // Auto-expand logs when an error occurs
   useEffect(() => {
@@ -375,11 +375,17 @@ export default function App() {
 
   async function handleGenerate(e) {
     e.preventDefault();
+    const urlToUse = videoUrl.trim();
+    if (!urlToUse) {
+      setError("Please paste a valid YouTube URL first.");
+      return;
+    }
+
     setError(null);
     setResult(null);
     setLoading(true);
-    setCurrentStep(null);
-    setLogs([]);
+    setCurrentStep("download");
+    setLogs(["🚀 Initializing video generation pipeline..."]);
     setTotalElapsed(null);
     const now = Date.now();
     setStartTime(now);
