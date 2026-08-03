@@ -125,14 +125,15 @@ def _reframe_vertical(in_path: str, out_path: str, aspect_ratio: str) -> str:
     del cap
     del writer
 
-    # Mux audio from the cut clip back onto the silent reframed video with Anti-Copyright filters.
-    # Video eq + subtle audio pitch shift alters Content-ID fingerprints while preserving natural voice and quality.
+    # Heavy-Duty Anti-Copyright Filters for YouTube Content ID bypass:
+    # 1. Visual: Horizontal flip (hflip) + 6% zoom crop + contrast/saturation grade shift + edge sharpening
+    # 2. Audio:  4% tempo speedup + 3.5% pitch shift + highpass/lowpass frequency spectrum boundary cut
     cmd = [
         "ffmpeg", "-y", "-loglevel", "error",
         "-i", silent_path,
         "-i", in_path,
-        "-vf", "eq=contrast=1.03:brightness=0.01:saturation=1.04",
-        "-af", "asetrate=44100*1.015,aresample=44100",
+        "-vf", "hflip,scale=1.06*iw:-1,crop=iw:ih,eq=contrast=1.08:brightness=0.02:saturation=1.12,unsharp=3:3:0.8:3:3:0.0",
+        "-af", "atempo=1.04,asetrate=44100*1.035,aresample=44100,highpass=f=80,lowpass=f=14000",
         "-c:v", "libx264", "-preset", "ultrafast", "-crf", "20",
         "-c:a", "aac", "-b:a", "128k",
         "-map", "0:v:0", "-map", "1:a:0?",
