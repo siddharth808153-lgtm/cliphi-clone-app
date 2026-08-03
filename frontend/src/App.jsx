@@ -266,8 +266,10 @@ function Timeline({ highlights, duration }) {
 }
 
 /* ─── Clip Card ───────────────────────────────────────────────────── */
-function ClipCard({ clip, index, youtubeConnected, onConnectYoutube }) {
-  const [title, setTitle] = useState(clip.title || `Short ${index + 1}`);
+  const defaultPartTitle = clip.title
+    ? (clip.title.startsWith("Part ") ? clip.title : `Part ${index + 1} - ${clip.title}`)
+    : `Part ${index + 1}`;
+  const [title, setTitle] = useState(defaultPartTitle);
   const [description, setDescription] = useState(clip.virality_reason || "");
   const [status, setStatus] = useState("idle");
   const [resultUrl, setResultUrl] = useState(null);
@@ -284,6 +286,7 @@ function ClipCard({ clip, index, youtubeConnected, onConnectYoutube }) {
           title: clip.title,
           hook: clip.hook_sentence,
           text: clip.transcript_text,
+          index: index,
         }),
       });
       const data = await res.json();

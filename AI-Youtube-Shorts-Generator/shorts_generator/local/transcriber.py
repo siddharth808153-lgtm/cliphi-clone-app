@@ -130,10 +130,27 @@ def transcribe_local(media_path: str, language: Optional[str] = None) -> Dict:
 
     from ..config import LOCAL_WHISPER_VAD_FILTER, LOCAL_WHISPER_VAD_PARAMETERS
 
+    # Extract lightweight mono 16kHz WAV audio to avoid RAM allocation errors on 1GB+ movie files
+    wav_path = str(Path(LOCAL_OUTPUT_DIR) / f"temp_audio_{os.getpid()}.wav")
+    transcribe_input = media_path
+    try:
+        import subprocess
+        print(f"[transcribe/local] extracting lightweight 16kHz audio for memory safety...", flush=True)
+        cmd = [
+            "ffmpeg", "-y", "-loglevel", "error",
+            "-i", media_path,
+            "-vn", "-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le",
+            wav_path
+        ]
+        subprocess.run(cmd, check=True)
+        transcribe_input = wav_path
+    except Exception as ex:
+        print(f"[transcribe/local] audio extract note: {ex}", flush=True)
+
     model = WhisperModel(LOCAL_WHISPER_MODEL, device=device, compute_type=compute_type)
 
     transcribe_kwargs = {
-        "audio": media_path,
+        "audio": transcribe_input,
         "language": language,
         "beam_size": 5,
         "condition_on_previous_text": False,
@@ -165,4 +182,9 @@ def transcribe_local(media_path: str, language: Optional[str] = None) -> Dict:
     transcript = {"duration": duration, "segments": segments}
     cache_path = _write_srt_cache(media_path, transcript)
     print(f"[transcribe/local] wrote cache: {cache_path}", flush=True)
+    if os.path.exists(wav_path):
+        try:
+            os.remove(wav_path)
+        except Exception:
+            pass
     return transcript

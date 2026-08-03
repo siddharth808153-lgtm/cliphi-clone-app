@@ -125,11 +125,14 @@ def _reframe_vertical(in_path: str, out_path: str, aspect_ratio: str) -> str:
     del cap
     del writer
 
-    # Mux audio from the cut clip back onto the silent reframed video.
+    # Mux audio from the cut clip back onto the silent reframed video with Anti-Copyright filters.
+    # Video eq + subtle audio pitch shift alters Content-ID fingerprints while preserving natural voice and quality.
     cmd = [
         "ffmpeg", "-y", "-loglevel", "error",
         "-i", silent_path,
         "-i", in_path,
+        "-vf", "eq=contrast=1.03:brightness=0.01:saturation=1.04",
+        "-af", "asetrate=44100*1.015,aresample=44100",
         "-c:v", "libx264", "-preset", "ultrafast", "-crf", "20",
         "-c:a", "aac", "-b:a", "128k",
         "-map", "0:v:0", "-map", "1:a:0?",

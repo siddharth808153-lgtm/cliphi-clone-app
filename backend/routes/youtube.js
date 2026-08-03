@@ -47,32 +47,30 @@ router.get("/youtube/status", (req, res) => {
   res.json({ connected: !!(req.session && req.session.youtubeTokens) });
 });
 
-// AI SEO Generator — generates viral title, description, and hashtags for max views
+// AI SEO Generator — generates viral Part 1, Part 2, ... Part N titles, descriptions, and hashtags for max views
 router.post("/youtube/generate-seo", (req, res) => {
-  const { title, hook, text } = req.body;
-  const rawTitle = (title || hook || "Must Watch Highlight").trim();
-  
-  // Clean up quotes
+  const { title, hook, text, index } = req.body;
+  const partNum = (typeof index === "number" ? index + 1 : 1);
+  const rawTitle = (title || hook || "Must Watch Moment").trim().replace(/^Part \d+\s*[-:]?\s*/i, "");
   const cleanTitle = rawTitle.replace(/^["']|["']$/g, "");
   
-  // Create high-converting viral title variants
   const emojis = ["🔥", "😱", "🤯", "💥", "👀", "✨"];
-  const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+  const randomEmoji = emojis[(partNum - 1) % emojis.length];
   
-  const seoTitle = `${randomEmoji} ${cleanTitle} #Shorts`;
+  const seoTitle = `[Part ${partNum}] ${randomEmoji} ${cleanTitle} #Shorts`;
   
-  // High-view SEO hashtag cloud
   const hashtags = [
-    "#Shorts", "#YouTubeShorts", "#Viral", "#Trending",
+    `#Part${partNum}`, "#Shorts", "#YouTubeShorts", "#Viral", "#Trending",
     "#FYP", "#MustWatch", "#ShortsVideo", "#ExplorePage", "#ViralShorts"
   ];
   
   const seoDescription = [
-    `🔥 ${cleanTitle}`,
+    `🎬 Part ${partNum} | ${cleanTitle}`,
     "",
-    text ? `"${text.slice(0, 180).trim()}..."` : "Watch this epic clip until the end!",
+    text ? `"${text.slice(0, 180).trim()}..."` : "Watch this epic scene until the end!",
     "",
-    "👍 Like & Subscribe for daily shorts!",
+    `📌 Watch Part ${partNum + 1} next on the channel!`,
+    "👍 Like & Subscribe for more parts!",
     "",
     hashtags.join(" "),
   ].join("\n");
@@ -81,6 +79,7 @@ router.post("/youtube/generate-seo", (req, res) => {
     title: seoTitle,
     description: seoDescription,
     hashtags,
+    partNumber: partNum,
   });
 });
 
