@@ -390,6 +390,11 @@ export default function App() {
         body: JSON.stringify({ videoUrl, numClips: Number(numClips) }),
       });
 
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        throw new Error(errData.error || errData.message || `Server HTTP error ${res.status}`);
+      }
+
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
