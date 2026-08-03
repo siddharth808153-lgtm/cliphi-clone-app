@@ -40,7 +40,7 @@ def call_gemini_llm(prompt: str) -> str:
             "    pip install -r requirements-local.txt"
         ) from e
 
-    client = genai.Client(api_key=require_gemini_key(), http_options={"max_retries": 0})
+    client = genai.Client(api_key=require_gemini_key())
     candidate_models = [
         GEMINI_MODEL,
         "gemini-2.5-flash",

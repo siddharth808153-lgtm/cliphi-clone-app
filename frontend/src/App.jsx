@@ -144,7 +144,8 @@ function PipelineProgress({ currentStep, logs, startTime, isError, hasEnded }) {
       <div className="pipeline-steps">
         {PIPELINE_STEPS.map((step, i) => {
           let status = "pending";
-          if (i < currentIndex) status = "done";
+          if (hasEnded && !isError) status = "done";
+          else if (i < currentIndex) status = "done";
           else if (i === currentIndex) status = isError ? "error" : "active";
 
           return (
