@@ -643,7 +643,9 @@ function VideoLibrary({ refreshTrigger, onUse, onUploadClip }) {
 /* ─── Main App ────────────────────────────────────────────────────── */
 export default function App() {
   const [videoUrl, setVideoUrl] = useState("");
-  const [numClips, setNumClips] = useState(3);
+  const [numClips, setNumClips] = useState(5);
+  const [clipMode, setClipMode] = useState("sequential");
+  const [partDuration, setPartDuration] = useState(150);
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(null);
   const [stepDetails, setStepDetails] = useState({});
@@ -773,7 +775,12 @@ export default function App() {
       const res = await fetch(`${API_BASE}/api/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ videoUrl, numClips: Number(numClips) }),
+        body: JSON.stringify({
+          videoUrl,
+          numClips: Number(numClips),
+          clipMode,
+          partDuration: Number(partDuration),
+        }),
       });
 
       if (!res.ok) {
@@ -929,13 +936,34 @@ export default function App() {
               disabled={loading}
             />
             <select
+              value={clipMode}
+              onChange={(e) => setClipMode(e.target.value)}
+              disabled={loading}
+              title="Select clip splitting mode"
+            >
+              <option value="sequential">🎬 Sequential Movie Parts</option>
+              <option value="highlights">✂️ AI Highlights</option>
+            </select>
+            {clipMode === "sequential" && (
+              <select
+                value={partDuration}
+                onChange={(e) => setPartDuration(Number(e.target.value))}
+                disabled={loading}
+                title="Part length"
+              >
+                <option value={120}>2.0m / part</option>
+                <option value={150}>2.5m / part</option>
+                <option value={180}>3.0m / part</option>
+              </select>
+            )}
+            <select
               value={numClips}
               onChange={(e) => setNumClips(e.target.value)}
               disabled={loading}
             >
-              {[2, 3, 4, 5].map((n) => (
+              {[3, 5, 10, 15, 20].map((n) => (
                 <option key={n} value={n}>
-                  {n} clips
+                  {n} parts
                 </option>
               ))}
             </select>

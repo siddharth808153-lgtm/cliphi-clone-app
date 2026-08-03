@@ -11,7 +11,7 @@ const PYTHON_BIN = process.env.PYTHON_BIN || "python";
  * inside the AI-Youtube-Shorts-Generator project, then reads and returns the
  * resulting JSON (transcript + highlights + shorts with local clip paths).
  */
-function runPipeline(videoUrl, numClips, onProgress) {
+function runPipeline(videoUrl, numClips, onProgress, options = {}) {
   let proc = null;
   const promise = new Promise((resolve, reject) => {
     if (!PYTHON_PROJECT_DIR) {
@@ -27,6 +27,9 @@ function runPipeline(videoUrl, numClips, onProgress) {
       `shorts_result_${Date.now()}.json`
     );
 
+    const clipMode = options.clipMode || "sequential";
+    const partDuration = options.partDuration || 150;
+
     const args = [
       "main.py",
       videoUrl,
@@ -34,6 +37,10 @@ function runPipeline(videoUrl, numClips, onProgress) {
       "local",
       "--num-clips",
       String(numClips),
+      "--clip-mode",
+      clipMode,
+      "--part-duration",
+      String(partDuration),
       "--output-json",
       outputJsonPath,
     ];

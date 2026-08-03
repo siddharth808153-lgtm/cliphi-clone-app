@@ -8,7 +8,7 @@ const { runPipeline } = require("../services/pythonRunner");
 /*  the final result JSON.                                            */
 /* ------------------------------------------------------------------ */
 router.post("/generate", (req, res) => {
-  const { videoUrl, numClips = 3 } = req.body;
+  const { videoUrl, numClips = 3, clipMode = "sequential", partDuration = 150 } = req.body;
 
   if (!videoUrl) {
     return res.status(400).json({ error: "videoUrl is required" });
@@ -100,7 +100,7 @@ router.post("/generate", (req, res) => {
 
   const startTime = Date.now();
 
-  const pipelinePromise = runPipeline(videoUrl, numClips, onProgress);
+  const pipelinePromise = runPipeline(videoUrl, numClips, onProgress, { clipMode, partDuration });
 
   pipelinePromise
     .then((result) => {

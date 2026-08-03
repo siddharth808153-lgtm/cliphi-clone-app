@@ -352,3 +352,34 @@ def get_highlights(
         highlights = _heuristic_highlights(transcript, num_clips)
 
     return {"highlights": highlights}
+
+
+def generate_sequential_parts(duration: float, num_parts: int = 5, part_duration: float = 150.0) -> List[Dict]:
+    """Generate contiguous, seamless sequential parts (Part 1, Part 2...) where each part starts where the previous ended."""
+    parts = []
+    start = 0.0
+    for i in range(1, num_parts + 1):
+        if duration > 0 and start >= duration:
+            break
+        end = start + part_duration
+        if duration > 0:
+            end = min(end, duration)
+        if end - start < 10:
+            break
+
+        s_min, s_sec = int(start // 60), int(start % 60)
+        e_min, e_sec = int(end // 60), int(end % 60)
+        time_label = f"{s_min}:{s_sec:02d} - {e_min}:{e_sec:02d}"
+
+        parts.append(
+            {
+                "title": f"Part {i} ({time_label})",
+                "start_time": round(start, 2),
+                "end_time": round(end, 2),
+                "score": 95 - (i * 2),
+                "hook_sentence": f"Part {i} ({time_label})",
+                "virality_reason": f"Seamless Part {i} ({time_label})",
+            }
+        )
+        start = end
+    return parts

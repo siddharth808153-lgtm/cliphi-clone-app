@@ -20,11 +20,14 @@ def _run_local(
     aspect_ratio: str,
     download_format: str,
     language: Optional[str],
+    clip_mode: str = "sequential",
+    part_duration: float = 150.0,
 ) -> Dict:
     from .local.clipper import crop_highlights_local
     from .local.downloader import download_youtube_local
     from .local.llm import call_local_llm
     from .local.transcriber import transcribe_local
+    from .highlights import generate_sequential_parts
 
     source_path = download_youtube_local(youtube_url, fmt=download_format)
 
@@ -34,13 +37,18 @@ def _run_local(
             "Whisper produced no segments. The video may have no detectable speech."
         )
 
-    highlights_result = get_highlights(transcript, num_clips=num_clips, llm_fn=call_local_llm)
-    all_highlights: List[Dict] = highlights_result.get("highlights", [])
-    if not all_highlights:
-        raise RuntimeError("Highlight generator returned zero clips.")
+    if clip_mode == "sequential":
+        video_dur = transcript.get("duration", 0.0) or 1800.0
+        all_highlights = generate_sequential_parts(video_dur, num_parts=num_clips, part_duration=part_duration)
+        top = all_highlights
+    else:
+        highlights_result = get_highlights(transcript, num_clips=num_clips, llm_fn=call_local_llm)
+        all_highlights = highlights_result.get("highlights", [])
+        if not all_highlights:
+            raise RuntimeError("Highlight generator returned zero clips.")
+        top = sorted(all_highlights, key=lambda h: int(h.get("score", 0)), reverse=True)[:num_clips]
 
-    top = sorted(all_highlights, key=lambda h: int(h.get("score", 0)), reverse=True)[:num_clips]
-    print(f"[pipeline/local] cropping {len(top)} of {len(all_highlights)} candidates", flush=True)
+    print(f"[pipeline/local] cropping {len(top)} parts (mode={clip_mode}, part_duration={part_duration}s)", flush=True)
 
     shorts = crop_highlights_local(source_path, top, aspect_ratio=aspect_ratio)
 
@@ -94,6 +102,8 @@ def generate_shorts(
     download_format: str = "720",
     language: Optional[str] = None,
     mode: str = "api",
+    clip_mode: str = "sequential",
+    part_duration: float = 150.0,
 ) -> Dict:
     """Run the full pipeline and return a structured result.
 
