@@ -61,7 +61,7 @@ function formatDuration(seconds) {
 }
 
 /* ─── Pipeline Progress Component ─────────────────────────────────── */
-function PipelineProgress({ currentStep, stepDetails = {}, logs, startTime, isError, hasEnded }) {
+function PipelineProgress({ currentStep, stepDetails = {}, stepLabels = {}, logs, startTime, isError, hasEnded }) {
   const logsEndRef = useRef(null);
   const [elapsed, setElapsed] = useState(0);
   const [showLogs, setShowLogs] = useState(true);
@@ -148,6 +148,14 @@ function PipelineProgress({ currentStep, stepDetails = {}, logs, startTime, isEr
           else if (i < currentIndex) status = "done";
           else if (i === currentIndex) status = isError ? "error" : "active";
 
+          // Use dynamic label override from SSE if available
+          const displayLabel = stepLabels[step.id] || step.label;
+          // Use dynamic description based on label
+          const isLocalFile = displayLabel === "Using uploaded video";
+          const displayDesc = isLocalFile
+            ? "Processing local video file directly"
+            : step.description;
+
           return (
             <div
               key={step.id}
@@ -170,7 +178,7 @@ function PipelineProgress({ currentStep, stepDetails = {}, logs, startTime, isEr
               <div className="pipeline-step-content">
                 <div className="pipeline-step-header">
                   <span className="pipeline-step-icon">{step.icon}</span>
-                  <span className="pipeline-step-label">{step.label}</span>
+                  <span className="pipeline-step-label">{displayLabel}</span>
                   {stepDetails[step.id] && (status === "active" || status === "done") && (
                     <span className={`pipeline-step-badge ${status === "done" ? "pipeline-step-badge--done" : ""}`}>
                       {stepDetails[step.id]}
@@ -183,7 +191,7 @@ function PipelineProgress({ currentStep, stepDetails = {}, logs, startTime, isEr
                     <span className="pipeline-step-time" style={{ color: "#ff5a5a" }}>Failed</span>
                   )}
                 </div>
-                <p className="pipeline-step-desc">{step.description}</p>
+                <p className="pipeline-step-desc">{displayDesc}</p>
               </div>
             </div>
           );
@@ -360,6 +368,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(null);
   const [stepDetails, setStepDetails] = useState({});
+  const [stepLabels, setStepLabels] = useState({});
   const [logs, setLogs] = useState([]);
   const [startTime, setStartTime] = useState(null);
   const [result, setResult] = useState(null);
@@ -456,6 +465,7 @@ export default function App() {
     setLoading(true);
     setCurrentStep("download");
     setStepDetails({});
+    setStepLabels({});
     setLogs(["🚀 Initializing video generation pipeline..."]);
     setTotalElapsed(null);
     const now = Date.now();
@@ -507,6 +517,12 @@ export default function App() {
           if (eventType && eventData) {
             if (eventType === "step") {
               if (eventData.step) setCurrentStep(eventData.step);
+              if (eventData.label) {
+                setStepLabels((prev) => ({
+                  ...prev,
+                  [eventData.step]: eventData.label,
+                }));
+              }
               if (eventData.detail) {
                 setStepDetails((prev) => ({
                   ...prev,
@@ -646,6 +662,7 @@ export default function App() {
             <PipelineProgress
               currentStep={currentStep}
               stepDetails={stepDetails}
+              stepLabels={stepLabels}
               logs={logs}
               startTime={startTime}
               isError={!!error}

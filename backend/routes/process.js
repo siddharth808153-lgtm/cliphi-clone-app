@@ -50,7 +50,15 @@ router.post("/generate", (req, res) => {
 
   function onProgress(line) {
     let detail = null;
-    if (line.includes("downloading video:")) {
+    let overrideLabel = null;
+
+    if (line.includes("using local file:")) {
+      // Local/uploaded file — no download needed
+      const match = line.match(/using local file:\s*(.*)/i);
+      const fname = match ? match[1].trim().split(/[\/\\]/).pop() : "local file";
+      overrideLabel = "Using uploaded video";
+      detail = fname;
+    } else if (line.includes("downloading video:")) {
       const match = line.match(/downloading video:\s*(.*)/i);
       if (match) detail = match[1].trim();
     } else if (line.includes("checking link accessibility")) {
@@ -66,7 +74,7 @@ router.post("/generate", (req, res) => {
     for (const { pattern, step, label } of STEP_MAP) {
       if (pattern.test(line)) {
         currentStep = step;
-        sendEvent("step", { step, label, detail });
+        sendEvent("step", { step, label: overrideLabel || label, detail });
         break;
       }
     }
