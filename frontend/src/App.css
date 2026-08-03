@@ -1011,6 +1011,11 @@ main {
   border-color: var(--accent);
   transform: scale(1.04);
 }
+.vlib-use--selected {
+  background: rgba(52, 224, 161, 0.15) !important;
+  border-color: rgba(52, 224, 161, 0.5) !important;
+  color: var(--accent-2) !important;
+}
 
 .vlib-delete {
   flex-shrink: 0;

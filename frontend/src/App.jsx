@@ -366,6 +366,7 @@ function VideoLibrary({ refreshTrigger, onUse }) {
   const [videos, setVideos] = useState([]);
   const [deleting, setDeleting] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [selectedFilename, setSelectedFilename] = useState(null);
 
   const fetchVideos = useCallback(async () => {
     try {
@@ -446,11 +447,14 @@ function VideoLibrary({ refreshTrigger, onUse }) {
               </div>
               <div className="vlib-actions">
                 <button
-                  className="vlib-use"
-                  onClick={() => onUse && onUse(v.localPath, v.filename)}
+                  className={`vlib-use ${selectedFilename === v.filename ? "vlib-use--selected" : ""}`}
+                  onClick={() => {
+                    setSelectedFilename(v.filename);
+                    onUse && onUse(v.localPath, v.filename);
+                  }}
                   title="Use this video as input for clip generation"
                 >
-                  ▶ Use
+                  {selectedFilename === v.filename ? "✓ Ready" : "▶ Use"}
                 </button>
                 <button
                   className={`vlib-delete ${
@@ -671,11 +675,14 @@ export default function App() {
   }
 
   function handleUseVideo(localPath, filename) {
-    setVideoUrl(localPath);
-    setUploadState(null);
+    const pathToUse = localPath || filename;
+    const cleanName = filename ? filename.replace(/^(source_|upload_|short_)/, "").replace(/_\d{13}/, "") : pathToUse;
+    setVideoUrl(pathToUse);
+    setUploadState("done");
+    setUploadFilename(cleanName);
     setResult(null);
     setError(null);
-    // Scroll intake into view and focus the Generate button
+    // Scroll intake form smoothly into view
     setTimeout(() => {
       intakeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 50);
