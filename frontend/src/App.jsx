@@ -266,6 +266,7 @@ function Timeline({ highlights, duration }) {
 }
 
 /* ─── Clip Card ───────────────────────────────────────────────────── */
+function ClipCard({ clip, index, youtubeConnected, onConnectYoutube }) {
   const defaultPartTitle = clip.title
     ? (clip.title.startsWith("Part ") ? clip.title : `Part ${index + 1} - ${clip.title}`)
     : `Part ${index + 1}`;
