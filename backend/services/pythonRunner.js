@@ -52,6 +52,7 @@ function runPipeline(videoUrl, numClips, onProgress) {
     });
 
     let lineBuf = "";
+    let stderrBuf = "";
 
     proc.stdout.on("data", (d) => {
       lineBuf += d.toString();
