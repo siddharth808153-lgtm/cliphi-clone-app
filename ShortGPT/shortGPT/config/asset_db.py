@@ -164,9 +164,9 @@ class AssetDatabase:
         asset = cls.local_assets._get(name)
         if 'required' not in asset:
             try:
-                Path(asset['path']).unlink()
-            except FileNotFoundError as e:
-                print(f"File not found: {e}")
+                Path(asset['path']).unlink(missing_ok=True)
+            except Exception as e:
+                print(f"File cleanup warning: {e}")
             cls.local_assets._delete(name)
 
     @classmethod

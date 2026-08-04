@@ -1,0 +1,316 @@
+{
+  "topics": [
+    {
+      "id": "fallback_14",
+      "rank": 15,
+      "title": "Elon Musk's Latest Announcement Changes EVERYTHING",
+      "channelTitle": "Trending Topic",
+      "thumbnail": null,
+      "publishedAt": "2026-08-03T22:51:22.150Z",
+      "views": 6200000,
+      "likes": 248000,
+      "comments": 31000,
+      "viralScore": 93,
+      "niche": "AI & Technology",
+      "categoryId": "0",
+      "description": "Trending topic: Elon Musk's Latest Announcement Changes EVERYTHING",
+      "tags": [
+        "ai",
+        "technology"
+      ],
+      "suggestedTopic": "Elon Musk's Latest Announcement Changes EVERYTHING",
+      "source": "curated_fallback"
+    },
+    {
+      "id": "fallback_0",
+      "rank": 1,
+      "title": "AI Just Changed Everything — 5 Tools You MUST Know",
+      "channelTitle": "Trending Topic",
+      "thumbnail": null,
+      "publishedAt": "2026-08-04T10:12:39.170Z",
+      "views": 2400000,
+      "likes": 96000,
+      "comments": 12000,
+      "viralScore": 92,
+      "niche": "AI & Technology",
+      "categoryId": "0",
+      "description": "Trending topic: AI Just Changed Everything — 5 Tools You MUST Know",
+      "tags": [
+        "ai",
+        "technology"
+      ],
+      "suggestedTopic": "AI Just Changed Everything — 5 Tools You MUST Know",
+      "source": "curated_fallback"
+    },
+    {
+      "id": "fallback_6",
+      "rank": 7,
+      "title": "NASA Just Found Something Impossible on Mars",
+      "channelTitle": "Trending Topic",
+      "thumbnail": null,
+      "publishedAt": "2026-08-04T18:04:53.594Z",
+      "views": 4100000,
+      "likes": 164000,
+      "comments": 20500,
+      "viralScore": 91,
+      "niche": "Space & Science",
+      "categoryId": "0",
+      "description": "Trending topic: NASA Just Found Something Impossible on Mars",
+      "tags": [
+        "space",
+        "science"
+      ],
+      "suggestedTopic": "NASA Just Found Something Impossible on Mars",
+      "source": "curated_fallback"
+    },
+    {
+      "id": "fallback_10",
+      "rank": 11,
+      "title": "This New AI Robot Shocked The Entire World",
+      "channelTitle": "Trending Topic",
+      "thumbnail": null,
+      "publishedAt": "2026-08-04T02:19:28.199Z",
+      "views": 3700000,
+      "likes": 148000,
+      "comments": 18500,
+      "viralScore": 90,
+      "niche": "AI & Technology",
+      "categoryId": "0",
+      "description": "Trending topic: This New AI Robot Shocked The Entire World",
+      "tags": [
+        "ai",
+        "technology"
+      ],
+      "suggestedTopic": "This New AI Robot Shocked The Entire World",
+      "source": "curated_fallback"
+    },
+    {
+      "id": "fallback_13",
+      "rank": 14,
+      "title": "Why 99% of People Will Never Be Rich",
+      "channelTitle": "Trending Topic",
+      "thumbnail": null,
+      "publishedAt": "2026-08-04T13:03:40.224Z",
+      "views": 5100000,
+      "likes": 204000,
+      "comments": 25500,
+      "viralScore": 89,
+      "niche": "Finance & Wealth",
+      "categoryId": "0",
+      "description": "Trending topic: Why 99% of People Will Never Be Rich",
+      "tags": [
+        "finance",
+        "wealth"
+      ],
+      "suggestedTopic": "Why 99% of People Will Never Be Rich",
+      "source": "curated_fallback"
+    },
+    {
+      "id": "fallback_1",
+      "rank": 2,
+      "title": "Scientists Discover Something Terrifying Under The Ocean",
+      "channelTitle": "Trending Topic",
+      "thumbnail": null,
+      "publishedAt": "2026-08-04T10:14:52.007Z",
+      "views": 1800000,
+      "likes": 72000,
+      "comments": 9000,
+      "viralScore": 88,
+      "niche": "Space & Science",
+      "categoryId": "0",
+      "description": "Trending topic: Scientists Discover Something Terrifying Under The Ocean",
+      "tags": [
+        "space",
+        "science"
+      ],
+      "suggestedTopic": "Scientists Discover Something Terrifying Under The Ocean",
+      "source": "curated_fallback"
+    },
+    {
+      "id": "fallback_7",
+      "rank": 8,
+      "title": "How This 19-Year-Old Makes $50K/Month Online",
+      "channelTitle": "Trending Topic",
+      "thumbnail": null,
+      "publishedAt": "2026-08-04T22:48:44.249Z",
+      "views": 2800000,
+      "likes": 112000,
+      "comments": 14000,
+      "viralScore": 87,
+      "niche": "Finance & Wealth",
+      "categoryId": "0",
+      "description": "Trending topic: How This 19-Year-Old Makes $50K/Month Online",
+      "tags": [
+        "finance",
+        "wealth"
+      ],
+      "suggestedTopic": "How This 19-Year-Old Makes $50K/Month Online",
+      "source": "curated_fallback"
+    },
+    {
+      "id": "fallback_2",
+      "rank": 3,
+      "title": "5 Money Rules Rich People Follow That You Don't",
+      "channelTitle": "Trending Topic",
+      "thumbnail": null,
+      "publishedAt": "2026-08-03T22:29:51.263Z",
+      "views": 3200000,
+      "likes": 128000,
+      "comments": 16000,
+      "viralScore": 86,
+      "niche": "Finance & Wealth",
+      "categoryId": "0",
+      "description": "Trending topic: 5 Money Rules Rich People Follow That You Don't",
+      "tags": [
+        "finance",
+        "wealth"
+      ],
+      "suggestedTopic": "5 Money Rules Rich People Follow That You Don't",
+      "source": "curated_fallback"
+    },
+    {
+      "id": "fallback_8",
+      "rank": 9,
+      "title": "The Darkest Experiment in Human History",
+      "channelTitle": "Trending Topic",
+      "thumbnail": null,
+      "publishedAt": "2026-08-03T16:39:38.876Z",
+      "views": 1500000,
+      "likes": 60000,
+      "comments": 7500,
+      "viralScore": 85,
+      "niche": "Dark History",
+      "categoryId": "0",
+      "description": "Trending topic: The Darkest Experiment in Human History",
+      "tags": [
+        "dark history"
+      ],
+      "suggestedTopic": "The Darkest Experiment in Human History",
+      "source": "curated_fallback"
+    },
+    {
+      "id": "fallback_3",
+      "rank": 4,
+      "title": "This Ancient Civilization Was More Advanced Than We Think",
+      "channelTitle": "Trending Topic",
+      "thumbnail": null,
+      "publishedAt": "2026-08-03T15:21:38.048Z",
+      "views": 950000,
+      "likes": 38000,
+      "comments": 4750,
+      "viralScore": 84,
+      "niche": "Dark History",
+      "categoryId": "0",
+      "description": "Trending topic: This Ancient Civilization Was More Advanced Than We Think",
+      "tags": [
+        "dark history"
+      ],
+      "suggestedTopic": "This Ancient Civilization Was More Advanced Than We Think",
+      "source": "curated_fallback"
+    },
+    {
+      "id": "fallback_11",
+      "rank": 12,
+      "title": "7 Facts About Space That Will Blow Your Mind",
+      "channelTitle": "Trending Topic",
+      "thumbnail": null,
+      "publishedAt": "2026-08-04T10:29:22.697Z",
+      "views": 1100000,
+      "likes": 44000,
+      "comments": 5500,
+      "viralScore": 83,
+      "niche": "Facts & Curiosity",
+      "categoryId": "0",
+      "description": "Trending topic: 7 Facts About Space That Will Blow Your Mind",
+      "tags": [
+        "facts",
+        "curiosity"
+      ],
+      "suggestedTopic": "7 Facts About Space That Will Blow Your Mind",
+      "source": "curated_fallback"
+    },
+    {
+      "id": "fallback_4",
+      "rank": 5,
+      "title": "The Mindset Trick That Changed My Life Forever",
+      "channelTitle": "Trending Topic",
+      "thumbnail": null,
+      "publishedAt": "2026-08-04T07:02:45.501Z",
+      "views": 1200000,
+      "likes": 48000,
+      "comments": 6000,
+      "viralScore": 82,
+      "niche": "Motivation",
+      "categoryId": "0",
+      "description": "Trending topic: The Mindset Trick That Changed My Life Forever",
+      "tags": [
+        "motivation"
+      ],
+      "suggestedTopic": "The Mindset Trick That Changed My Life Forever",
+      "source": "curated_fallback"
+    },
+    {
+      "id": "fallback_9",
+      "rank": 10,
+      "title": "3 Psychology Tricks That Make You Unstoppable",
+      "channelTitle": "Trending Topic",
+      "thumbnail": null,
+      "publishedAt": "2026-08-04T02:03:57.866Z",
+      "views": 980000,
+      "likes": 39200,
+      "comments": 4900,
+      "viralScore": 81,
+      "niche": "Motivation",
+      "categoryId": "0",
+      "description": "Trending topic: 3 Psychology Tricks That Make You Unstoppable",
+      "tags": [
+        "motivation"
+      ],
+      "suggestedTopic": "3 Psychology Tricks That Make You Unstoppable",
+      "source": "curated_fallback"
+    },
+    {
+      "id": "fallback_5",
+      "rank": 6,
+      "title": "3 Animals More Intelligent Than Humans",
+      "channelTitle": "Trending Topic",
+      "thumbnail": null,
+      "publishedAt": "2026-08-03T18:07:38.501Z",
+      "views": 760000,
+      "likes": 30400,
+      "comments": 3800,
+      "viralScore": 79,
+      "niche": "Animals & Nature",
+      "categoryId": "0",
+      "description": "Trending topic: 3 Animals More Intelligent Than Humans",
+      "tags": [
+        "animals",
+        "nature"
+      ],
+      "suggestedTopic": "3 Animals More Intelligent Than Humans",
+      "source": "curated_fallback"
+    },
+    {
+      "id": "fallback_12",
+      "rank": 13,
+      "title": "The Secret Language Cats Use To Talk To You",
+      "channelTitle": "Trending Topic",
+      "thumbnail": null,
+      "publishedAt": "2026-08-03T20:39:06.420Z",
+      "views": 620000,
+      "likes": 24800,
+      "comments": 3100,
+      "viralScore": 78,
+      "niche": "Animals & Nature",
+      "categoryId": "0",
+      "description": "Trending topic: The Secret Language Cats Use To Talk To You",
+      "tags": [
+        "animals",
+        "nature"
+      ],
+      "suggestedTopic": "The Secret Language Cats Use To Talk To You",
+      "source": "curated_fallback"
+    }
+  ],
+  "lastUpdated": "2026-08-04T23:41:56.956Z"
+}

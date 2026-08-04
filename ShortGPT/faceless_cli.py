@@ -6,6 +6,8 @@ import asyncio
 import re
 import subprocess
 import time
+import urllib.request
+import urllib.parse
 from pathlib import Path
 
 # Force UTF-8 encoding for Windows console output
@@ -22,6 +24,55 @@ def log_step(tag, message):
 
 
 # ─────────────────────────────────────────────────────────────────────
+# CURATED 4K HD 9:16 VERTICAL SCENE WALLPAPER COLLECTIONS
+# ─────────────────────────────────────────────────────────────────────
+STOCK_COLLECTIONS = {
+    "space": [
+        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1080&h=1920&fit=crop&q=80",
+    ],
+    "tech": [
+        "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080&h=1920&fit=crop&q=80",
+    ],
+    "finance": [
+        "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=1080&h=1920&fit=crop&q=80",
+    ],
+    "animal": [
+        "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1533738363-b7f9aef128ce?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1561948955-570b270e7c36?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=1080&h=1920&fit=crop&q=80",
+    ],
+    "history": [
+        "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1514539079130-25950c84af65?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=1080&h=1920&fit=crop&q=80",
+    ],
+    "general": [
+        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1497436072909-60f360e1d4b1?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1434394354979-a235cd36269d?w=1080&h=1920&fit=crop&q=80",
+    ]
+}
+
+
+# ─────────────────────────────────────────────────────────────────────
 # 1. SCRIPT GENERATION
 # ─────────────────────────────────────────────────────────────────────
 def generate_script_llm(topic, niche):
@@ -30,7 +81,7 @@ def generate_script_llm(topic, niche):
     gemini_key = os.getenv("GEMINI_API_KEY")
     openai_key = os.getenv("OPENAI_API_KEY")
 
-    is_animated = "Animated" in niche or "Cat" in niche or "Story" in niche or "Hindi" in niche
+    is_animated = any(k in niche for k in ["Animated", "Cat", "Story", "Hindi", "Animal"])
 
     if is_animated:
         prompt = f"""Write a hilarious 35-45 second animated cartoon story script for YouTube Shorts about: '{topic}'.
@@ -41,7 +92,7 @@ Rules:
 1. Start with an entertaining hook line.
 2. Deliver a fast-paced comedic story with a funny twist or lesson.
 3. End with a Call To Action to Subscribe.
-4. Keep each sentence on a separate line.
+4. Keep each sentence on a separate line. Do NOT include camera directions or stage notes.
 """
     else:
         prompt = f"""Write an engaging, high-retention 30-45 second YouTube Short script about: '{topic}'.
@@ -49,9 +100,9 @@ Style/Niche: {niche}.
 Rules:
 1. Start with an irresistible hook in the first line.
 2. Deliver 3 short, fascinating points or facts.
-3. End with a subtle Call To Action.
+3. End with a subtle Call To Action to Subscribe.
 4. Keep spoken language natural and fast-paced. Do NOT include camera directions or speaker tags.
-5. Each sentence should be on its own line.
+5. Each sentence MUST be on its own line.
 """
 
     if gemini_key:
@@ -62,7 +113,7 @@ Rules:
             model = genai.GenerativeModel('gemini-1.5-flash')
             res = model.generate_content(prompt)
             if res.text:
-                return res.text.strip()
+                return clean_script_text(res.text)
         except Exception as e:
             log_step("script", f"Gemini API warning: {e}. Falling back...")
 
@@ -74,34 +125,70 @@ Rules:
             completion = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "You are an expert viral YouTube Shorts scriptwriter for animated stories."},
+                    {"role": "system", "content": "You are an expert viral YouTube Shorts scriptwriter."},
                     {"role": "user", "content": prompt}
                 ]
             )
-            return completion.choices[0].message.content.strip()
+            return clean_script_text(completion.choices[0].message.content)
         except Exception as e:
             log_step("script", f"OpenAI API warning: {e}. Falling back...")
 
-    log_step("script", "Using intelligent template engine for script creation...")
-    t = topic.strip()
-    if "Hindi" in niche or "Cat" in niche:
+    log_step("script", "Using intelligent topic story generator...")
+    return generate_fallback_script(topic, niche)
+
+
+def clean_script_text(raw_text):
+    lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
+    cleaned = []
+    for line in lines:
+        line = re.sub(r"\[.*?\]|\(.*?\)", "", line)
+        line = re.sub(r"^(Narrator|Speaker|Host|Character|Person):\s*", "", line, flags=re.IGNORECASE)
+        line = line.strip()
+        if line and len(line) > 5:
+            cleaned.append(line)
+    return "\n".join(cleaned)
+
+
+def generate_fallback_script(topic, niche):
+    t = topic.strip().title()
+    if "Hindi" in niche:
         return (
-            f"एक बार की बात है, {t} में एक बहुत ही चालाक मोटा बिल्ला रहता था!\n"
-            f"वह रोज जंगल के दूसरे जानवरों को अपनी चतुराई से बेवकूफ बनाता था।\n"
-            f"लेकिन एक दिन बंदर गोलू ने बिल्ले को सबक सिखाने की एक जबरदस्त योजना बनाई!\n"
-            f"जब बिल्ला मलाई खाने पहुंचा, तो गोलू ने डिब्बे का ढक्कन बंद कर दिया और बिल्ला फंस गया!\n"
-            f"यह देखकर सब जानवर जोर-जोर से हंसने लगे!\n"
-            f"अगर आपको यह मजेदार कहानी पसंद आई तो वीडियो को लाइक करें और चैनल को सब्सक्राइब करें!"
+            f"क्या आप जानते हैं {t} के बारे में यह चौंकाने वाला सच?\n"
+            f"दुनिया में {t} से जुड़ी कई ऐसी बातें हैं जो हर इंसान को हैरान कर देती हैं!\n"
+            f"वैज्ञानिकों के अनुसार, यह रहस्य आज भी लोगों को सोचने पर मजबूर कर देता है!\n"
+            f"अगर आपको यह रोचक जानकारी पसंद आई तो वीडियो को लाइक करें और चैनल को सब्सक्राइब करें!"
         )
-    return (
-        f"Once upon a time, in a world of {t}, there lived a super smart 3D Fat Cat!\n"
-        f"Every single day, he pulled the funniest pranks on his animal best friends.\n"
-        f"First, he tricked the greedy pig into hiding all his snacks in a secret tree hole.\n"
-        f"Second, when the clever monkey found out, they teamed up for the ultimate payback!\n"
-        f"And third, the lesson learned completely turned the entire forest upside down!\n"
-        f"Which character was your favorite?\n"
-        f"Drop a comment below and hit subscribe for more daily animated short stories!"
-    )
+    elif "Cat" in niche or "Animal" in niche:
+        return (
+            f"Meet the world's most dramatic cat taking on {t}!\n"
+            f"Every single morning, he attempts the most impossible stunt in the house.\n"
+            f"His friends couldn't believe their eyes when he actually pulled it off!\n"
+            f"Which moment was your favorite? Comment below and subscribe for more!"
+        )
+    elif "Finance" in niche or "Money" in niche:
+        return (
+            f"Here are 3 money secrets about {t} that rich people won't tell you!\n"
+            f"First, 90% of people make the huge mistake of ignoring smart leverage.\n"
+            f"Second, compound growth turns small daily habits into massive wealth.\n"
+            f"Third, investing in high-income skills creates true financial freedom!\n"
+            f"Subscribe now for daily wealth building tips!"
+        )
+    elif "Tech" in niche or "AI" in niche:
+        return (
+            f"AI just completely transformed everything we knew about {t}!\n"
+            f"First, new breakthroughs allow automated tools to perform tasks in seconds.\n"
+            f"Second, experts predict this technology will revolutionize the entire industry.\n"
+            f"Third, learning these AI tools now gives you an unfair advantage!\n"
+            f"Hit subscribe to stay ahead of the future!"
+        )
+    else:
+        return (
+            f"Did you know these 3 mind-blowing facts about {t}?\n"
+            f"First, researchers uncovered a secret that completely changes the history of {t}!\n"
+            f"Second, this phenomenon happens far more often than anyone ever realized.\n"
+            f"Third, the actual reason behind it will leave you completely speechless!\n"
+            f"Which fact surprised you the most? Subscribe for more daily mind-blowing facts!"
+        )
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -111,7 +198,6 @@ async def generate_tts_with_subs(text, voice, audio_path, srt_path):
     log_step("tts", f"Synthesizing voiceover with EdgeTTS ({voice})...")
     import edge_tts
 
-    # Use boundary="WordBoundary" to get word-level timing
     communicate = edge_tts.Communicate(text, voice, boundary="WordBoundary")
     submaker = edge_tts.SubMaker()
 
@@ -122,11 +208,9 @@ async def generate_tts_with_subs(text, voice, audio_path, srt_path):
             elif chunk["type"] == "WordBoundary":
                 submaker.feed(chunk)
 
-    # Get SRT content from SubMaker
     srt_content = submaker.get_srt()
 
     if not srt_content.strip():
-        # Fallback: generate sentence-level SRT if word boundaries unavailable
         log_step("tts", "Word boundaries unavailable, generating sentence-level subtitles...")
         srt_content = generate_fallback_srt(text, audio_path)
 
@@ -138,7 +222,6 @@ async def generate_tts_with_subs(text, voice, audio_path, srt_path):
 
 
 def generate_fallback_srt(text, audio_path):
-    """Generate sentence-level SRT based on estimated timing."""
     duration = get_audio_duration(audio_path)
     sentences = [s.strip() for s in re.split(r'[.\n]+', text) if s.strip()]
     if not sentences:
@@ -146,17 +229,13 @@ def generate_fallback_srt(text, audio_path):
 
     total_chars = sum(len(s) for s in sentences)
     srt_lines = []
-    current_time = 0.3  # small offset
+    current_time = 0.3
 
     for idx, sentence in enumerate(sentences, 1):
         sent_duration = (len(sentence) / total_chars) * (duration - 0.5)
         start = current_time
         end = current_time + sent_duration
-
-        start_str = format_srt_time(start)
-        end_str = format_srt_time(end)
-
-        srt_lines.append(f"{idx}\n{start_str} --> {end_str}\n{sentence}\n")
+        srt_lines.append(f"{idx}\n{format_srt_time(start)} --> {format_srt_time(end)}\n{sentence}\n")
         current_time = end + 0.05
 
     return "\n".join(srt_lines)
@@ -171,14 +250,13 @@ def format_srt_time(seconds):
 
 
 # ─────────────────────────────────────────────────────────────────────
-# 3. GROUP WORD-LEVEL SRT INTO READABLE SUBTITLE CHUNKS + ASS
+# 3. STYLED BIONIC KARAOKE CAPTIONS (ACTIVE WORD HIGHLIGHT)
 # ─────────────────────────────────────────────────────────────────────
 def srt_to_ass(srt_path, ass_path):
-    """Convert word-level SRT to grouped, styled ASS subtitle file."""
-    log_step("subtitles", "Creating styled animated captions...")
+    log_step("subtitles", "Creating bionic karaoke word-by-word active highlight captions...")
 
     ass_header = r"""[Script Info]
-Title: Faceless Short Subtitles
+Title: Faceless Bionic Karaoke Subtitles
 ScriptType: v4.00+
 PlayResX: 1080
 PlayResY: 1920
@@ -186,26 +264,21 @@ WrapStyle: 0
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,Arial,80,&H00FFFFFF,&H000088FF,&H00000000,&H96000000,-1,0,0,0,100,100,3,0,1,5,2,2,80,80,350,1
+Style: Default,Arial Black,76,&H00FFFFFF,&H0000FFFF,&H00000000,&H96000000,-1,0,0,0,100,100,2,0,1,5,3,2,60,60,440,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
 
-    # Parse SRT
     with open(srt_path, "r", encoding="utf-8") as f:
         srt_text = f.read()
 
-    # Parse all SRT cues
     cues = []
     blocks = re.split(r'\r?\n\r?\n+', srt_text.strip())
     for block in blocks:
-        lines = block.strip().split('\n')
-        # Handle \r in lines
-        lines = [l.strip() for l in lines]
+        lines = [l.strip() for l in block.strip().split('\n') if l.strip()]
         if len(lines) < 3:
             continue
-
         time_line = lines[1]
         text = ' '.join(lines[2:]).strip()
         if not text:
@@ -224,34 +297,35 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         cues.append({"start": start_ms, "end": end_ms, "text": text})
 
     if not cues:
-        log_step("subtitles", "No cues found in SRT, writing empty ASS")
         with open(ass_path, "w", encoding="utf-8") as f:
             f.write(ass_header)
         return ass_path
 
-    # Group word-level cues into 3-5 word subtitle chunks for readability
-    WORDS_PER_GROUP = 4
-    grouped = []
-    for i in range(0, len(cues), WORDS_PER_GROUP):
-        chunk = cues[i:i + WORDS_PER_GROUP]
-        group_text = " ".join(c["text"] for c in chunk).upper()
-        group_start = chunk[0]["start"]
-        group_end = chunk[-1]["end"]
-        grouped.append({"start": group_start, "end": group_end, "text": group_text})
-
-    # Convert to ASS dialogue lines
+    WORDS_PER_GROUP = 3
     events = []
-    for g in grouped:
-        start_str = ms_to_ass_time(g["start"])
-        end_str = ms_to_ass_time(g["end"])
-        clean = g["text"].replace('\n', ' ')
-        events.append(f"Dialogue: 0,{start_str},{end_str},Default,,0,0,0,,{clean}")
+
+    for i in range(0, len(cues), WORDS_PER_GROUP):
+        group = cues[i:i + WORDS_PER_GROUP]
+        for active_idx, target in enumerate(group):
+            start_str = ms_to_ass_time(target["start"])
+            end_str = ms_to_ass_time(target["end"])
+
+            formatted_words = []
+            for w_idx, word_cue in enumerate(group):
+                w_text = word_cue["text"].upper()
+                if w_idx == active_idx:
+                    formatted_words.append(rf"{{\c&H0000FFFF&}}{w_text}{{\c&H00FFFFFF&}}")
+                else:
+                    formatted_words.append(w_text)
+
+            line_text = " ".join(formatted_words)
+            events.append(f"Dialogue: 0,{start_str},{end_str},Default,,0,0,0,,{line_text}")
 
     with open(ass_path, "w", encoding="utf-8") as f:
         f.write(ass_header)
         f.write('\n'.join(events) + '\n')
 
-    log_step("subtitles", f"Styled ASS subtitles created with {len(events)} caption groups")
+    log_step("subtitles", f"Bionic Karaoke ASS subtitles created with {len(events)} active word states")
     return ass_path
 
 
@@ -263,8 +337,90 @@ def ms_to_ass_time(ms):
     return f"{h}:{m:02d}:{s:02d}.{cs:02d}"
 
 
+STOP_WORDS = {"a", "an", "the", "in", "on", "of", "to", "for", "with", "and", "or", "is", "are", "was", "were", "this", "that", "these", "those", "you", "your", "did", "know", "first", "second", "third", "which", "fact", "favorite", "subscribe", "more", "daily", "comment", "below", "hit", "like", "here", "have", "about"}
+
+def extract_prompt_keywords(sentence, topic):
+    words = re.findall(r"\b[a-zA-Z]{3,}\b", sentence.lower())
+    filtered = [w for w in words if w not in STOP_WORDS]
+    topic_words = re.findall(r"\b[a-zA-Z]{3,}\b", topic.lower())
+    combined = (filtered[:3] + [w for w in topic_words if w not in filtered])[:4]
+    if not combined:
+        combined = topic_words[:3] or ["cinematic", "render"]
+    return " ".join(combined)
+
+
 # ─────────────────────────────────────────────────────────────────────
-# 4. RENDER VIDEO WITH GRADIENT BG + AUDIO + SUBTITLES (FFmpeg)
+# 4. HD 9:16 SCENE IMAGE GENERATION ACCORDING TO SPOKEN CONTENT
+# ─────────────────────────────────────────────────────────────────────
+def fetch_scene_images(script, topic, niche, output_dir):
+    log_step("visuals", "Generating AI scene images according to spoken content...")
+
+    sentences = [s.strip() for s in script.splitlines() if s.strip()]
+    if not sentences:
+        sentences = [topic]
+
+    niche_lower = niche.lower()
+    collection_key = "general"
+    for key in ["space", "tech", "finance", "animal", "history"]:
+        if key in niche_lower or (key == "animal" and "cat" in niche_lower):
+            collection_key = key
+            break
+
+    urls = STOCK_COLLECTIONS.get(collection_key, STOCK_COLLECTIONS["general"])
+    image_paths = []
+
+    for idx, sentence in enumerate(sentences):
+        img_path = str(output_dir / f"scene_{idx}_{int(time.time())}.jpg")
+
+        # Extract 2-4 core keywords from sentence for sharp scene image prompt
+        keywords = extract_prompt_keywords(sentence, topic)
+
+        kw_query = urllib.parse.quote(keywords.replace(" ", ","))
+        lorem_url = f"https://loremflickr.com/1080/1920/{kw_query}/all?random={idx + int(time.time()) % 100}"
+        fallback_url = urls[idx % len(urls)]
+
+        success = False
+        try:
+            log_step("visuals", f"Generating scene image {idx + 1}/{len(sentences)} matching spoken content: '{keywords}'...")
+            req = urllib.request.Request(lorem_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+            with urllib.request.urlopen(req, timeout=8) as resp, open(img_path, 'wb') as out_f:
+                out_f.write(resp.read())
+
+            if os.path.exists(img_path) and os.path.getsize(img_path) > 5000:
+                image_paths.append(img_path)
+                success = True
+        except Exception as e:
+            log_step("visuals", f"Scene {idx + 1} notice ({e}). Using curated stock visual...")
+
+        if not success:
+            try:
+                req = urllib.request.Request(fallback_url, headers={'User-Agent': 'Mozilla/5.0'})
+                with urllib.request.urlopen(req, timeout=6) as resp, open(img_path, 'wb') as out_f:
+                    out_f.write(resp.read())
+                image_paths.append(img_path)
+            except Exception:
+                create_fallback_image(img_path, idx)
+                image_paths.append(img_path)
+
+        # Brief pause between scene image generations to avoid rate limit
+        time.sleep(0.5)
+
+    return image_paths, sentences
+
+
+def create_fallback_image(output_path, idx):
+    colors = ["0x0f172a", "0x1e1b4b", "0x311042", "0x064e3b", "0x451a03"]
+    c = colors[idx % len(colors)]
+    cmd = [
+        "ffmpeg", "-y", "-f", "lavfi",
+        "-i", f"color=c={c}:s=1080x1920:d=1",
+        "-frames:v", "1", output_path
+    ]
+    subprocess.run(cmd, capture_output=True)
+
+
+# ─────────────────────────────────────────────────────────────────────
+# 5. RENDER MULTI-SCENE VERTICAL VIDEO SEQUENCE + SUBTITLES (NO ZOOM)
 # ─────────────────────────────────────────────────────────────────────
 def get_audio_duration(audio_path):
     result = subprocess.run(
@@ -275,60 +431,91 @@ def get_audio_duration(audio_path):
     return float(info["format"]["duration"])
 
 
-def render_video(audio_path, srt_path, output_video, topic, duration):
-    log_step("render", "Rendering 9:16 vertical Short with gradient background + subtitles...")
+def render_video(audio_path, ass_path, output_video, topic, duration, scene_images=None):
+    log_step("render", "Rendering 9:16 vertical Short collage sequence + subtitles...")
 
-    # Compute relative posix path for SRT subtitle file
-    rel_srt_path = Path(srt_path).relative_to(CURRENT_DIR).as_posix()
+    rel_ass_path = Path(ass_path).relative_to(CURRENT_DIR).as_posix()
+    clean_topic = re.sub(r"[^a-zA-Z0-9 ]", "", topic)[:35].upper()
 
-    clean_topic = re.sub(r"[^a-zA-Z0-9 ]", "", topic)[:40]
+    if scene_images and len(scene_images) > 0:
+        num_scenes = len(scene_images)
+        per_scene_dur = duration / num_scenes
 
-    # Build FFmpeg filter_complex for a stylish background and bold centered subtitles
-    sub_style = "Fontname=Arial,Fontsize=22,PrimaryColour=&H0000FFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=3,Shadow=2,Alignment=2,MarginV=300"
+        cmd = ["ffmpeg", "-y"]
+        for img in scene_images:
+            cmd.extend(["-loop", "1", "-t", f"{per_scene_dur:.2f}", "-i", img])
 
-    filter_complex = (
-        # Dark gradient background (navy to deep purple)
-        f"color=c=0x0a0a2e:s=1080x1920:d={duration}:r=30[bg1];"
-        f"color=c=0x1a0533:s=1080x960:d={duration}:r=30[grad];"
-        f"[bg1][grad]overlay=0:960:format=auto[bgblend];"
+        cmd.extend(["-i", audio_path])
 
-        # Animated glow orb
-        f"color=c=0x6366f1@0.15:s=400x400:d={duration}:r=30,"
-        f"format=yuva420p,"
-        f"geq=lum='lum(X,Y)':a='if(lt(hypot(X-200,Y-200),180),80,0)'[glow];"
-        f"[bgblend][glow]overlay='340+20*sin(t)':'700+30*cos(t*0.7)':format=auto[bgfx];"
+        filter_parts = []
+        for i in range(num_scenes):
+            # Clean static crop to 1080x1920 without zoompan effect
+            filter_parts.append(
+                f"[{i}:v]scale=1080:1920:force_original_aspect_ratio=increase,"
+                f"crop=1080:1920,setsar=1[v{i}];"
+            )
 
-        # Topic title at top
-        f"[bgfx]drawtext="
-        f"fontfile='C\\:/Windows/Fonts/arialbd.ttf':"
-        f"text='{clean_topic}':"
-        f"fontsize=48:fontcolor=white@0.85:"
-        f"x=(w-text_w)/2:y=180:"
-        f"borderw=3:bordercolor=black@0.5[titled];"
+        concat_inputs = "".join(f"[v{i}]" for i in range(num_scenes))
+        filter_parts.append(f"{concat_inputs}concat=n={num_scenes}:v=1:a=0[vbase];")
 
-        # Accent underline
-        f"[titled]drawbox=x=340:y=260:w=400:h=4:color=0x818cf8@0.8:t=fill[lined];"
+        # Top title banner + ASS styled subtitles
+        filter_parts.append(
+            f"[vbase]drawtext="
+            f"fontfile='C\\:/Windows/Fonts/arialbd.ttf':"
+            f"text='{clean_topic}':"
+            f"fontsize=44:fontcolor=yellow@0.95:"
+            f"x=(w-text_w)/2:y=160:"
+            f"borderw=4:bordercolor=black@0.8[titled];"
 
-        # Burn subtitles using SRT filter with custom yellow force_style
-        f"[lined]subtitles='{rel_srt_path}':force_style='{sub_style}'[out]"
-    )
+            f"[titled]ass='{rel_ass_path}'[out]"
+        )
 
-    cmd = [
-        "ffmpeg", "-y",
-        "-f", "lavfi", "-i", f"nullsrc=s=1080x1920:d={duration}:r=30",
-        "-i", audio_path,
-        "-filter_complex", filter_complex,
-        "-map", "[out]",
-        "-map", "1:a",
-        "-c:v", "libx264",
-        "-preset", "fast",
-        "-crf", "23",
-        "-pix_fmt", "yuv420p",
-        "-c:a", "aac",
-        "-b:a", "192k",
-        "-shortest",
-        output_video
-    ]
+        filter_complex = "".join(filter_parts)
+
+        cmd.extend([
+            "-filter_complex", filter_complex,
+            "-map", "[out]",
+            "-map", f"{num_scenes}:a",
+            "-c:v", "libx264",
+            "-preset", "fast",
+            "-crf", "22",
+            "-pix_fmt", "yuv420p",
+            "-c:a", "aac",
+            "-b:a", "192k",
+            "-shortest",
+            output_video
+        ])
+
+    else:
+        filter_complex = (
+            f"color=c=0x0a0a2e:s=1080x1920:d={duration}:r=30[bg1];"
+            f"color=c=0x1a0533:s=1080x960:d={duration}:r=30[grad];"
+            f"[bg1][grad]overlay=0:960:format=auto[bgblend];"
+            f"[bgblend]drawtext="
+            f"fontfile='C\\:/Windows/Fonts/arialbd.ttf':"
+            f"text='{clean_topic}':"
+            f"fontsize=48:fontcolor=white@0.85:"
+            f"x=(w-text_w)/2:y=180:"
+            f"borderw=3:bordercolor=black@0.5[titled];"
+            f"[titled]ass='{rel_ass_path}'[out]"
+        )
+
+        cmd = [
+            "ffmpeg", "-y",
+            "-f", "lavfi", "-i", f"nullsrc=s=1080x1920:d={duration}:r=30",
+            "-i", audio_path,
+            "-filter_complex", filter_complex,
+            "-map", "[out]",
+            "-map", "1:a",
+            "-c:v", "libx264",
+            "-preset", "fast",
+            "-crf", "23",
+            "-pix_fmt", "yuv420p",
+            "-c:a", "aac",
+            "-b:a", "192k",
+            "-shortest",
+            output_video
+        ]
 
     log_step("render", "Running FFmpeg render pipeline...")
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -341,27 +528,24 @@ def render_video(audio_path, srt_path, output_video, topic, duration):
 
 
 # ─────────────────────────────────────────────────────────────────────
-# 5. GENERATE THUMBNAIL
+# 6. GENERATE THUMBNAIL
 # ─────────────────────────────────────────────────────────────────────
 def generate_thumbnail(output_video, thumbnail_path, topic):
     log_step("thumbnail", "Generating video thumbnail...")
-
     clean_topic = re.sub(r"[^a-zA-Z0-9 ]", "", topic)[:30]
 
-    # Extract a frame from the video and add styled text overlay
-    # Use a frame at ~2 seconds into the video
     vf_filter = (
-        f"select=eq(n\\,60),"
+        f"select=eq(n\\,30),"
         f"drawtext="
         f"fontfile='C\\:/Windows/Fonts/arialbd.ttf':"
         f"text='{clean_topic}':"
-        f"fontsize=72:fontcolor=white:"
+        f"fontsize=64:fontcolor=white:"
         f"x=(w-text_w)/2:y=(h-text_h)/2-80:"
         f"borderw=5:bordercolor=black,"
         f"drawtext="
         f"fontfile='C\\:/Windows/Fonts/arialbd.ttf':"
         f"text='MUST WATCH':"
-        f"fontsize=56:fontcolor=yellow:"
+        f"fontsize=52:fontcolor=yellow:"
         f"x=(w-text_w)/2:y=(h-text_h)/2+40:"
         f"borderw=4:bordercolor=black"
     )
@@ -385,7 +569,7 @@ def generate_thumbnail(output_video, thumbnail_path, topic):
 
 
 # ─────────────────────────────────────────────────────────────────────
-# 6. SEO METADATA
+# 7. SEO METADATA
 # ─────────────────────────────────────────────────────────────────────
 def generate_seo_metadata(topic, script):
     clean_topic = topic.title()
@@ -426,23 +610,26 @@ def main():
         # 1. Generate script
         script = generate_script_llm(args.topic, args.niche)
 
-        # 2. Generate TTS audio + word-level SRT subtitles
+        # 2. Fetch HD 9:16 scene visual images
+        scene_images, _ = fetch_scene_images(script, args.topic, args.niche, output_dir)
+
+        # 3. Generate TTS audio + word-level SRT subtitles
         asyncio.run(generate_tts_with_subs(script, args.voice, audio_path, srt_path))
 
-        # 3. Convert SRT to styled ASS subtitles
+        # 4. Convert SRT to styled ASS subtitles
         srt_to_ass(srt_path, ass_path)
 
-        # 4. Get audio duration
+        # 5. Get audio duration
         duration = get_audio_duration(audio_path)
         log_step("render", f"Audio duration: {duration:.1f}s")
 
-        # 5. Render video with gradient bg + audio + subtitles
-        render_video(audio_path, srt_path, video_path, args.topic, duration)
+        # 6. Render multi-scene video with HD visuals + audio + ASS subtitles
+        render_video(audio_path, ass_path, video_path, args.topic, duration, scene_images=scene_images)
 
-        # 6. Generate thumbnail
+        # 7. Generate thumbnail
         generate_thumbnail(video_path, thumb_path, args.topic)
 
-        # 7. SEO metadata
+        # 8. SEO metadata
         title, description, hashtags = generate_seo_metadata(args.topic, script)
 
         log_step("done", "Faceless Short generation completed successfully!")
