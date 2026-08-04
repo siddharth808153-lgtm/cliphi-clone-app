@@ -1,0 +1,11 @@
+{
+  "name": "@shortcut/service-video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Video Rendering Service (FFmpeg 9:16 vertical canvas, dynamic background, thumbnail extraction)",
+  "main": "index.js",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "fluent-ffmpeg": "^2.1.3"
+  }
+}

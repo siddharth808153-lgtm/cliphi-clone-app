@@ -1,0 +1,10 @@
+{
+  "name": "@shortcut/service-captions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Subtitle & Captions Formatting Service (SRT and ASS subtitle cue generators)",
+  "main": "index.js",
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
+}

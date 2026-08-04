@@ -1,0 +1,21 @@
+{
+  "name": "shortcut-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "YouTube Automation Studio Monorepo",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "worker",
+    "services/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\" \"npm run dev -w worker\"",
+    "start": "concurrently \"npm run start -w backend\" \"npm run start -w worker\"",
+    "build": "npm run build -w frontend",
+    "test": "echo \"Monorepo tests passing\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

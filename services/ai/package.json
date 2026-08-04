@@ -1,0 +1,12 @@
+{
+  "name": "@shortcut/service-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI Script Generation Service (Gemini, OpenAI, Template Engine)",
+  "main": "index.js",
+  "dependencies": {
+    "@google/generative-ai": "^0.17.1",
+    "dotenv": "^16.4.5",
+    "openai": "^4.56.0"
+  }
+}
