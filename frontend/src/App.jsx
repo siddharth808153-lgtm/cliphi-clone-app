@@ -4,47 +4,17 @@ const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
 
 /* ─── Pipeline step definitions ───────────────────────────────────── */
 const PIPELINE_STEPS = [
-  {
-    id: "download",
-    label: "Downloading video",
-    icon: "⬇",
-    description: "Fetching source from YouTube via yt-dlp",
-    avgDuration: 15,
-  },
-  {
-    id: "transcribe",
-    label: "Transcribing audio",
-    icon: "🎙",
-    description: "Running Whisper speech-to-text locally",
-    avgDuration: 45,
-  },
-  {
-    id: "analyze",
-    label: "Analyzing content",
-    icon: "🔍",
-    description: "Detecting content type and density",
-    avgDuration: 10,
-  },
-  {
-    id: "highlights",
-    label: "Finding highlights",
-    icon: "✨",
-    description: "AI scanning transcript for viral moments",
-    avgDuration: 30,
-  },
-  {
-    id: "crop",
-    label: "Rendering clips",
-    icon: "🎬",
-    description: "Cropping and encoding vertical shorts",
-    avgDuration: 40,
-  },
+  { id: "download", label: "Downloading video", icon: "⬇", description: "Fetching source from YouTube via yt-dlp", avgDuration: 15 },
+  { id: "transcribe", label: "Transcribing audio", icon: "🎙", description: "Running Whisper speech-to-text locally", avgDuration: 45 },
+  { id: "analyze", label: "Analyzing content", icon: "🔍", description: "Detecting content type and density", avgDuration: 10 },
+  { id: "highlights", label: "Finding highlights", icon: "✨", description: "AI scanning transcript for viral moments", avgDuration: 30 },
+  { id: "crop", label: "Rendering clips", icon: "🎬", description: "Cropping and encoding vertical shorts", avgDuration: 40 },
 ];
 
 function scoreColor(score) {
-  if (score >= 80) return "var(--accent-2)";
-  if (score >= 60) return "#E8C34A";
-  return "var(--text-dim)";
+  if (score >= 80) return "#10b981";
+  if (score >= 60) return "#f59e0b";
+  return "#9ca3af";
 }
 
 function formatTime(seconds) {
@@ -60,1040 +30,732 @@ function formatDuration(seconds) {
   return s > 0 ? `${m}m ${s}s` : `${m}m`;
 }
 
-/* ─── Pipeline Progress Component ─────────────────────────────────── */
-function PipelineProgress({ currentStep, stepDetails = {}, stepLabels = {}, isLocalInput = false, logs, startTime, isError, hasEnded }) {
-  const logsEndRef = useRef(null);
-  const [elapsed, setElapsed] = useState(0);
-  const [showLogs, setShowLogs] = useState(true);
-
-  // Auto-expand logs when an error occurs
-  useEffect(() => {
-    if (isError) {
-      setShowLogs(true);
-    }
-  }, [isError]);
-
-  // Update elapsed timer every second
-  useEffect(() => {
-    if (hasEnded) return;
-    const id = setInterval(() => {
-      setElapsed((Date.now() - startTime) / 1000);
-    }, 1000);
-    return () => clearInterval(id);
-  }, [startTime, hasEnded]);
-
-  // Auto-scroll logs
-  useEffect(() => {
-    if (showLogs && logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [logs, showLogs]);
-
-  const currentIndex = PIPELINE_STEPS.findIndex((s) => s.id === currentStep);
-
-  // Calculate ETA
-  const remainingSteps = PIPELINE_STEPS.slice(
-    Math.max(0, currentIndex + 1)
-  );
-  const etaSeconds = remainingSteps.reduce(
-    (sum, s) => sum + s.avgDuration,
-    0
-  );
-
-  // Calculate overall progress percentage
-  const totalAvg = PIPELINE_STEPS.reduce((sum, s) => sum + s.avgDuration, 0);
-  const completedAvg = PIPELINE_STEPS.slice(0, Math.max(0, currentIndex))
-    .reduce((sum, s) => sum + s.avgDuration, 0);
-  const currentStepAvg = currentIndex >= 0 ? PIPELINE_STEPS[currentIndex].avgDuration : 0;
-  const progressPercent = hasEnded && !isError
-    ? 100
-    : Math.min(
-        95,
-        ((completedAvg + currentStepAvg * 0.5) / totalAvg) * 100
-      );
-
-  return (
-    <div className={`pipeline-progress ${isError ? "pipeline-progress--error" : ""}`}>
-      {/* Overall progress bar */}
-      <div className="pipeline-topbar">
-        <div className="pipeline-progress-bar">
-          <div
-            className="pipeline-progress-fill"
-            style={{
-              width: `${progressPercent}%`,
-              background: isError ? "#ff5a5a" : undefined,
-            }}
-          />
-          {!isError && !hasEnded && (
-            <div className="pipeline-progress-glow" style={{ left: `${progressPercent}%` }} />
-          )}
-        </div>
-        <div className="pipeline-stats">
-          <span className="pipeline-elapsed">
-            ⏱ {formatDuration(elapsed)}
-          </span>
-          {!hasEnded && etaSeconds > 0 && (
-            <span className="pipeline-eta">
-              ~{formatDuration(etaSeconds)} remaining
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Step cards */}
-      <div className="pipeline-steps">
-        {PIPELINE_STEPS.map((step, i) => {
-          let status = "pending";
-          if (hasEnded && !isError) status = "done";
-          else if (i < currentIndex) status = "done";
-          else if (i === currentIndex) status = isError ? "error" : "active";
-
-          const isDownloadStep = step.id === "download";
-          const currentLabel = stepLabels[step.id] || "";
-          const isLocal = isDownloadStep && (
-            isLocalInput ||
-            currentLabel.toLowerCase().includes("local") ||
-            currentLabel.toLowerCase().includes("upload")
-          );
-
-          const displayIcon = isLocal ? (status === "done" ? "✓" : "📁") : step.icon;
-          const displayLabel = isLocal
-            ? (status === "done" ? "Local video file loaded" : (stepLabels[step.id] || "Using local video"))
-            : (stepLabels[step.id] || step.label);
-          const displayDesc = isLocal
-            ? (status === "done" ? "Source video file is ready for processing" : "Processing video directly from disk (no download needed)")
-            : step.description;
-
-          return (
-            <div
-              key={step.id}
-              className={`pipeline-step pipeline-step--${status}`}
-            >
-              <div className="pipeline-step-indicator">
-                {status === "done" && (
-                  <span className="pipeline-step-check">✓</span>
-                )}
-                {status === "active" && (
-                  <span className="pipeline-step-spinner" />
-                )}
-                {status === "error" && (
-                  <span className="pipeline-step-error-icon">✕</span>
-                )}
-                {status === "pending" && (
-                  <span className="pipeline-step-dot" />
-                )}
-              </div>
-              <div className="pipeline-step-content">
-                <div className="pipeline-step-header">
-                  <span className="pipeline-step-icon">{displayIcon}</span>
-                  <span className="pipeline-step-label">{displayLabel}</span>
-                  {(stepDetails[step.id] || (status === "done" && isDownloadStep)) && (status === "active" || status === "done") && (
-                    <span className={`pipeline-step-badge ${status === "done" ? "pipeline-step-badge--done" : ""}`}>
-                      {status === "done" && isDownloadStep
-                        ? "File loaded ✓"
-                        : stepDetails[step.id]}
-                    </span>
-                  )}
-                  {status === "done" && (
-                    <span className="pipeline-step-time">✓</span>
-                  )}
-                  {status === "error" && (
-                    <span className="pipeline-step-time" style={{ color: "#ff5a5a" }}>Failed</span>
-                  )}
-                </div>
-                <p className="pipeline-step-desc">{displayDesc}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Log console toggle */}
-      <button
-        className="pipeline-logs-toggle"
-        onClick={() => setShowLogs(!showLogs)}
-      >
-        {showLogs ? "▾ Hide terminal output" : "▸ Show terminal output"}
-        <span className="pipeline-log-count">{logs.length} lines</span>
-      </button>
-
-      {showLogs && (
-        <div className="pipeline-logs">
-          {logs.map((line, i) => {
-            const isErr = /error|failed|exception/i.test(line);
-            return (
-              <div key={i} className={`pipeline-log-line ${isErr ? "pipeline-log-line--error" : ""}`}>
-                <span className="pipeline-log-prefix">$</span>
-                {line}
-              </div>
-            );
-          })}
-          <div ref={logsEndRef} />
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ─── Timeline ────────────────────────────────────────────────────── */
-function Timeline({ highlights, duration }) {
-  if (!duration) return null;
-  return (
-    <div className="timeline">
-      <div className="timeline-track">
-        {highlights.map((h, i) => {
-          const left = (h.start_time / duration) * 100;
-          const width = Math.max(
-            0.6,
-            ((h.end_time - h.start_time) / duration) * 100
-          );
-          return (
-            <div
-              key={i}
-              className="timeline-marker"
-              style={{ left: `${left}%`, width: `${width}%` }}
-              title={`${h.title} (${formatTime(h.start_time)}–${formatTime(
-                h.end_time
-              )})`}
-            />
-          );
-        })}
-      </div>
-      <div className="timeline-labels">
-        <span>0:00</span>
-        <span>{formatTime(duration)}</span>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Clip Card ───────────────────────────────────────────────────── */
-function ClipCard({ clip, index, youtubeConnected, onConnectYoutube }) {
-  const defaultPartTitle = clip.title
-    ? (clip.title.startsWith("Part ") ? clip.title : `Part ${index + 1} - ${clip.title}`)
-    : `Part ${index + 1}`;
-  const [title, setTitle] = useState(defaultPartTitle);
-  const [description, setDescription] = useState(clip.virality_reason || "");
-  const [status, setStatus] = useState("idle");
-  const [resultUrl, setResultUrl] = useState(null);
-  const [errorMsg, setErrorMsg] = useState(null);
-  const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
-
-  async function handleGenerateSeo() {
-    setIsGeneratingSeo(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/youtube/generate-seo`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: clip.title,
-          hook: clip.hook_sentence,
-          text: clip.transcript_text,
-          index: index,
-        }),
-      });
-      const data = await res.json();
-      if (data.title) setTitle(data.title);
-      if (data.description) setDescription(data.description);
-    } catch (err) {
-      console.error("SEO generation failed:", err);
-    } finally {
-      setIsGeneratingSeo(false);
-    }
-  }
-
-  async function handleUpload() {
-    if (!youtubeConnected) {
-      onConnectYoutube();
-      return;
-    }
-    setStatus("uploading");
-    setErrorMsg(null);
-    try {
-      const res = await fetch(`${API_BASE}/api/youtube/upload`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: clip.filename, title, description }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Upload failed");
-      setResultUrl(data.url);
-      setStatus("done");
-    } catch (err) {
-      setErrorMsg(err.message);
-      setStatus("error");
-    }
-  }
-
-  return (
-    <div className="clip-card">
-      <div className="clip-preview">
-        {clip.playbackUrl ? (
-          <video
-            src={`${API_BASE}${clip.playbackUrl}`}
-            controls
-            preload="metadata"
-          />
-        ) : (
-          <div className="clip-preview-error">render failed</div>
-        )}
-        <span
-          className="clip-score"
-          style={{ borderColor: scoreColor(clip.score) }}
-        >
-          {clip.score}
-        </span>
-      </div>
-
-      <div className="clip-meta">
-        <span className="clip-time">
-          {formatTime(clip.start_time)}–{formatTime(clip.end_time)}
-        </span>
-
-        <input
-          className="clip-title-input"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-
-        {clip.hook_sentence && (
-          <p className="clip-hook">"{clip.hook_sentence}"</p>
-        )}
-
-        <button
-          type="button"
-          className="ai-seo-btn"
-          onClick={handleGenerateSeo}
-          disabled={isGeneratingSeo}
-        >
-          {isGeneratingSeo ? "Generating SEO Title & Tags…" : "✨ AI Auto-SEO (Title, Description & Tags)"}
-        </button>
-
-        <textarea
-          className="clip-desc-input"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-        />
-
-        <button
-          className={`upload-btn upload-btn--${status}`}
-          onClick={handleUpload}
-          disabled={status === "uploading" || status === "done"}
-        >
-          {status === "idle" &&
-            (youtubeConnected
-              ? "Upload to YouTube"
-              : "Connect YouTube to upload")}
-          {status === "uploading" && "Uploading…"}
-          {status === "done" && "Uploaded ✓"}
-          {status === "error" && "Retry upload"}
-        </button>
-
-        {status === "done" && resultUrl && (
-          <a
-            className="clip-link"
-            href={resultUrl}
-            target="_blank"
-            rel="noreferrer"
-          >
-            View on YouTube →
-          </a>
-        )}
-        {status === "error" && <p className="clip-error">{errorMsg}</p>}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Clip Upload Modal ───────────────────────────────────────────── */
-function ClipUploadModal({ video, youtubeConnected, onConnectYoutube, onClose }) {
-  const defaultTitle = `Part 1 - ${video.filename.replace(/\.mp4$/i, "")}`;
-  const [title, setTitle] = useState(defaultTitle);
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("idle");
-  const [resultUrl, setResultUrl] = useState(null);
-  const [errorMsg, setErrorMsg] = useState(null);
-  const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
-
-  async function handleGenerateSeo() {
-    setIsGeneratingSeo(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/youtube/generate-seo`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, text: video.filename }),
-      });
-      const data = await res.json();
-      if (data.title) setTitle(data.title);
-      if (data.description) setDescription(data.description);
-    } catch (err) {
-      console.error("SEO generation failed:", err);
-    } finally {
-      setIsGeneratingSeo(false);
-    }
-  }
-
-  async function handleUpload() {
-    if (!youtubeConnected) {
-      onConnectYoutube();
-      return;
-    }
-    setStatus("uploading");
-    setErrorMsg(null);
-    try {
-      const res = await fetch(`${API_BASE}/api/youtube/upload`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: video.filename, title, description }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Upload failed");
-      setResultUrl(data.url);
-      setStatus("done");
-    } catch (err) {
-      setErrorMsg(err.message);
-      setStatus("error");
-    }
-  }
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <span className="modal-title">✨ AI Auto-SEO & YouTube Upload</span>
-          <button className="modal-close" onClick={onClose}>✕</button>
-        </div>
-        <div className="modal-body">
-          <video src={`${API_BASE}${video.url}`} controls className="modal-video" />
-          
-          <button
-            type="button"
-            className="ai-seo-btn"
-            onClick={handleGenerateSeo}
-            disabled={isGeneratingSeo}
-          >
-            {isGeneratingSeo ? "Generating SEO Title & Tags…" : "✨ AI Auto-SEO (Title, Description & Tags)"}
-          </button>
-
-          <input
-            className="clip-title-input"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Short Title..."
-          />
-          <textarea
-            className="clip-desc-input"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={4}
-            placeholder="Short Description & Hashtags..."
-          />
-          <button
-            className={`upload-btn upload-btn--${status}`}
-            onClick={handleUpload}
-            disabled={status === "uploading" || status === "done"}
-          >
-            {status === "idle" && (youtubeConnected ? "Upload to YouTube" : "Connect YouTube to upload")}
-            {status === "uploading" && "Uploading to YouTube…"}
-            {status === "done" && "Uploaded Successfully ✓"}
-            {status === "error" && "Retry Upload"}
-          </button>
-          {status === "done" && resultUrl && (
-            <a className="clip-link" href={resultUrl} target="_blank" rel="noreferrer">
-              View on YouTube Shorts →
-            </a>
-          )}
-          {status === "error" && <p className="clip-error">{errorMsg}</p>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Video Library Sidebar ─────────────────────────────── */
-function VideoLibrary({ refreshTrigger, onUse, onUploadClip }) {
-  const [videos, setVideos] = useState([]);
-  const [deleting, setDeleting] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(null);
-  const [selectedFilename, setSelectedFilename] = useState(null);
-
-  const fetchVideos = useCallback(async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/videos`);
-      const data = await res.json();
-      setVideos(data.videos || []);
-    } catch {
-      setVideos([]);
-    }
-  }, []);
-
-  useEffect(() => { fetchVideos(); }, [fetchVideos, refreshTrigger]);
-
-  async function handleDelete(filename) {
-    if (confirmDelete !== filename) {
-      setConfirmDelete(filename);
-      setTimeout(() => setConfirmDelete(null), 3000);
-      return;
-    }
-    setDeleting(filename);
-    setConfirmDelete(null);
-    try {
-      await fetch(`${API_BASE}/api/videos/${encodeURIComponent(filename)}`, { method: "DELETE" });
-      setVideos((prev) => prev.filter((v) => v.filename !== filename));
-    } catch (err) {
-      console.error("Delete failed:", err);
-    } finally {
-      setDeleting(null);
-    }
-  }
-
-  const totalSize = videos.reduce((acc, v) => acc + v.size, 0);
-  function fmtTotal(bytes) {
-    if (bytes >= 1024 * 1024 * 1024) return (bytes / 1024 / 1024 / 1024).toFixed(1) + " GB";
-    if (bytes >= 1024 * 1024) return (bytes / 1024 / 1024).toFixed(0) + " MB";
-    return (bytes / 1024).toFixed(0) + " KB";
-  }
-
-  return (
-    <aside className="video-library">
-      <div className="vlib-header">
-        <span className="vlib-title">📂 Video Library</span>
-        <span className="vlib-meta">
-          {videos.length} file{videos.length !== 1 ? "s" : ""} &middot; {fmtTotal(totalSize)}
-        </span>
-        <button className="vlib-refresh" onClick={fetchVideos} title="Refresh">↺</button>
-      </div>
-
-      {videos.length === 0 ? (
-        <div className="vlib-empty">
-          <span className="vlib-empty-icon">📼</span>
-          <p>No source videos yet.<br />Download a YouTube video or upload one!</p>
-        </div>
-      ) : (
-        <div className="vlib-list">
-          {videos.map((v) => (
-            <div key={v.filename} className="vlib-item">
-              <video
-                className="vlib-thumb"
-                src={`${API_BASE}${v.url}`}
-                muted
-                preload="metadata"
-                onMouseOver={(e) => e.currentTarget.play()}
-                onMouseOut={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
-              />
-              <div className="vlib-info">
-                <div className="vlib-filename" title={v.filename}>
-                  {v.filename.replace(/^(source_|upload_|short_)/, "").replace(/_\d{13}/, "")}
-                </div>
-                <div className="vlib-badges">
-                  <span className={`vlib-type vlib-type--${v.type}`}>
-                    {v.type === "uploaded" ? "⬆ uploaded"
-                      : v.type === "clip" ? "✂️ clip"
-                      : "⬇ downloaded"}
-                  </span>
-                  <span className="vlib-size">{v.sizeLabel}</span>
-                </div>
-              </div>
-              <div className="vlib-actions">
-                {v.type === "clip" && (
-                  <button
-                    className="vlib-seo-upload"
-                    onClick={() => onUploadClip && onUploadClip(v)}
-                    title="AI Auto-SEO & Upload to YouTube"
-                  >
-                    ✨ Upload
-                  </button>
-                )}
-                <button
-                  className={`vlib-use ${selectedFilename === v.filename ? "vlib-use--selected" : ""}`}
-                  onClick={() => {
-                    setSelectedFilename(v.filename);
-                    onUse && onUse(v.localPath, v.filename);
-                  }}
-                  title="Use this video as input for clip generation"
-                >
-                  {selectedFilename === v.filename ? "✓ Ready" : "▶ Use"}
-                </button>
-                <button
-                  className={`vlib-delete ${
-                    confirmDelete === v.filename ? "vlib-delete--confirm" : ""
-                  }`}
-                  disabled={deleting === v.filename}
-                  onClick={() => handleDelete(v.filename)}
-                  title={confirmDelete === v.filename ? "Click again to confirm delete" : "Delete file"}
-                >
-                  {deleting === v.filename
-                    ? "⏳"
-                    : confirmDelete === v.filename
-                    ? "⚠️ Sure?"
-                    : "🗑️"}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </aside>
-  );
-}
-
-/* ─── Main App ────────────────────────────────────────────────────── */
 export default function App() {
-  const [videoUrl, setVideoUrl] = useState("");
-  const [numClips, setNumClips] = useState(5);
-  const [clipMode, setClipMode] = useState("sequential");
-  const [partDuration, setPartDuration] = useState(150);
-  const [loading, setLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState(null);
-  const [stepDetails, setStepDetails] = useState({});
-  const [stepLabels, setStepLabels] = useState({});
-  const [logs, setLogs] = useState([]);
-  const [startTime, setStartTime] = useState(null);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
-  const [totalElapsed, setTotalElapsed] = useState(null);
-  const [youtubeConnected, setYoutubeConnected] = useState(false);
-  const [uploadState, setUploadState] = useState(null); // null | 'uploading' | 'done' | 'error'
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadFilename, setUploadFilename] = useState("");
-  const [dragOver, setDragOver] = useState(false);
-  const [libRefresh, setLibRefresh] = useState(0);
-  const [channelAnalytics, setChannelAnalytics] = useState(null);
-  const [activeUploadVideo, setActiveUploadVideo] = useState(null);
-  const fileInputRef = useRef(null);
-  const uploadedPathRef = useRef(null);
-  const intakeRef = useRef(null);
+  const [activeTab, setActiveTab] = useState("clipper"); // clipper, faceless, scheduler, monetization
+  const [ytConnected, setYtConnected] = useState(false);
 
+  // Check YouTube connection
   useEffect(() => {
     fetch(`${API_BASE}/api/youtube/status`, { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => {
-        setYoutubeConnected(d.connected);
-        if (d.connected) {
-          fetch(`${API_BASE}/api/youtube/analytics`, { credentials: "include" })
-            .then((r) => r.json())
-            .then((ad) => { if (ad.channel) setChannelAnalytics(ad.channel); })
-            .catch(() => {});
-        }
-      })
-      .catch(() => {});
+      .then((res) => res.json())
+      .then((data) => setYtConnected(!!data.connected))
+      .catch(() => setYtConnected(false));
   }, []);
 
-  const isLocalInput = useMemo(() => {
-    const url = (videoUrl || "").trim();
-    if (!url) return false;
-    return !url.startsWith("http://") && !url.startsWith("https://");
-  }, [videoUrl]);
+  return (
+    <div className="studio-app">
+      {/* Navigation Header */}
+      <header className="studio-header">
+        <div className="studio-brand">
+          <span className="studio-logo">⚡</span>
+          <div>
+            <h1 className="studio-title">YouTube Automation Studio</h1>
+            <p className="studio-subtitle">AI Short Generator • Faceless Creator • Auto-Scheduler</p>
+          </div>
+        </div>
 
-  const duration = useMemo(
-    () => result?.transcript?.duration || 0,
-    [result]
+        <nav className="studio-nav">
+          <button
+            className={`nav-tab ${activeTab === "clipper" ? "nav-tab--active" : ""}`}
+            onClick={() => setActiveTab("clipper")}
+          >
+            ✂️ Video Clipper
+          </button>
+          <button
+            className={`nav-tab ${activeTab === "faceless" ? "nav-tab--active" : ""}`}
+            onClick={() => setActiveTab("faceless")}
+          >
+            🤖 Faceless Short AI (ShortGPT)
+          </button>
+          <button
+            className={`nav-tab ${activeTab === "scheduler" ? "nav-tab--active" : ""}`}
+            onClick={() => setActiveTab("scheduler")}
+          >
+            📅 Auto-Pilot Scheduler
+          </button>
+          <button
+            className={`nav-tab ${activeTab === "monetization" ? "nav-tab--active" : ""}`}
+            onClick={() => setActiveTab("monetization")}
+          >
+            💡 Monetization & Niches
+          </button>
+          <button
+            className={`nav-tab ${activeTab === "storage" ? "nav-tab--active" : ""}`}
+            onClick={() => setActiveTab("storage")}
+          >
+            💾 Storage Manager
+          </button>
+        </nav>
+
+        <div className="studio-header-right">
+          {ytConnected ? (
+            <span className="yt-badge yt-badge--connected">✓ YouTube Connected</span>
+          ) : (
+            <a href={`${API_BASE}/auth/google`} className="yt-connect-btn">
+              🔗 Connect YouTube
+            </a>
+          )}
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="studio-main">
+        {activeTab === "clipper" && <ClipperTab API_BASE={API_BASE} />}
+        {activeTab === "faceless" && <FacelessTab API_BASE={API_BASE} />}
+        {activeTab === "scheduler" && <SchedulerTab API_BASE={API_BASE} />}
+        {activeTab === "monetization" && <MonetizationTab API_BASE={API_BASE} />}
+        {activeTab === "storage" && <StorageTab API_BASE={API_BASE} />}
+      </main>
+    </div>
   );
+}
 
-  async function handleUpload(file) {
-    if (!file) return;
-    setUploadState("uploading");
-    setUploadProgress(0);
-    setUploadFilename(file.name);
-    setError(null);
-    uploadedPathRef.current = null;
+/* =================================================================== */
+/* 1. VIDEO CLIPPER TAB (OPUSCLIP STYLE)                               */
+/* =================================================================== */
+function ClipperTab({ API_BASE }) {
+  const [videoUrl, setVideoUrl] = useState("");
+  const [numClips, setNumClips] = useState(3);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [currentStep, setCurrentStep] = useState("download");
+  const [logs, setLogs] = useState([]);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
 
-    const formData = new FormData();
-    formData.append("video", file);
-
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", `${API_BASE}/api/upload`);
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          setUploadProgress(Math.round((e.loaded / e.total) * 100));
-        }
-      };
-      xhr.onload = () => {
-        if (xhr.status === 200) {
-          const data = JSON.parse(xhr.responseText);
-          uploadedPathRef.current = data.localPath;
-          setUploadState("done");
-          setVideoUrl(data.localPath);
-          setLibRefresh((n) => n + 1); // refresh library
-          resolve(data.localPath);
-        } else {
-          const err = JSON.parse(xhr.responseText || "{}").error || "Upload failed";
-          setUploadState("error");
-          setError(err);
-          reject(new Error(err));
-        }
-      };
-      xhr.onerror = () => {
-        setUploadState("error");
-        setError("Upload failed — check that the backend is running.");
-        reject(new Error("Upload failed"));
-      };
-      xhr.send(formData);
-    });
-  }
-
-  function handleDropZoneClick() {
-    fileInputRef.current?.click();
-  }
-
-  function handleFileChange(e) {
-    const file = e.target.files?.[0];
-    if (file) handleUpload(file);
-  }
-
-  function handleDrop(e) {
+  const handleGenerate = async (e) => {
     e.preventDefault();
-    setDragOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) handleUpload(file);
-  }
+    if (!videoUrl) return;
 
-  async function handleGenerate(e) {
-    e.preventDefault();
-    const urlToUse = videoUrl.trim();
-    if (!urlToUse) {
-      setError("Please paste a YouTube URL or upload a video file first.");
-      return;
-    }
-
+    setIsGenerating(true);
     setError(null);
     setResult(null);
-    setLoading(true);
+    setLogs([]);
     setCurrentStep("download");
-    setStepDetails(isLocalInput ? { download: "Extracting audio via FFmpeg..." } : {});
-    setStepLabels(isLocalInput ? { download: "Loading video" } : {});
-    setLogs(["🚀 Initializing video generation pipeline..."]);
-    setTotalElapsed(null);
-    const now = Date.now();
-    setStartTime(now);
 
     try {
-      const res = await fetch(`${API_BASE}/api/generate`, {
+      const response = await fetch(`${API_BASE}/api/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          videoUrl,
-          numClips: Number(numClips),
-          clipMode,
-          partDuration: Number(partDuration),
-        }),
+        body: JSON.stringify({ videoUrl, numClips: Number(numClips) }),
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-        throw new Error(errData.error || errData.message || `Server HTTP error ${res.status}`);
-      }
-
-      const reader = res.body.getReader();
+      const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
 
       while (true) {
-        const { done, value } = await reader.read();
+        const { value, done } = await reader.read();
         if (done) break;
-
         buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() || "";
 
-        // Parse SSE event blocks (events in SSE spec are separated by double newline \n\n)
-        const blocks = buffer.split("\n\n");
-        buffer = blocks.pop() || ""; // Keep incomplete block in buffer
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const eventMatch = line.match(/^event:\s*(.*)$/m);
+          const dataMatch = line.match(/^data:\s*(.*)$/m);
+          if (eventMatch && dataMatch) {
+            const eventName = eventMatch[1].trim();
+            const data = JSON.parse(dataMatch[1].trim());
 
-        for (const block of blocks) {
-          const lines = block.split("\n");
-          let eventType = null;
-          let eventData = null;
-
-          for (const line of lines) {
-            if (line.startsWith("event: ")) {
-              eventType = line.slice(7).trim();
-            } else if (line.startsWith("data: ")) {
-              try {
-                eventData = JSON.parse(line.slice(6));
-              } catch (e) {
-                // Ignore parse errors for partial chunks
-              }
-            }
-          }
-
-          if (eventType && eventData) {
-            if (eventType === "step") {
-              if (eventData.step) {
-                const STEP_ORDER = { download: 0, transcribe: 1, analyze: 2, highlights: 3, crop: 4 };
-                setCurrentStep((prev) => {
-                  const prevIdx = STEP_ORDER[prev] !== undefined ? STEP_ORDER[prev] : -1;
-                  const newIdx = STEP_ORDER[eventData.step] !== undefined ? STEP_ORDER[eventData.step] : 0;
-                  return newIdx >= prevIdx ? eventData.step : prev;
-                });
-                if (eventData.step === "transcribe") {
-                  setStepDetails((prev) => ({
-                    ...prev,
-                    download: "File loaded ✓",
-                    transcribe: prev.transcribe || "Extracting audio snippet...",
-                  }));
-                }
-              }
-              if (eventData.label) {
-                setStepLabels((prev) => ({
-                  ...prev,
-                  [eventData.step]: eventData.label,
-                }));
-              }
-              if (eventData.detail) {
-                setStepDetails((prev) => ({
-                  ...prev,
-                  [eventData.step]: eventData.detail,
-                }));
-              }
-            } else if (eventType === "log") {
-              setLogs((prev) => [...prev, eventData.text]);
-            } else if (eventType === "done") {
-              setTotalElapsed(eventData.elapsed);
-              setResult(eventData);
-              setError(null);
-            } else if (eventType === "error") {
-              throw new Error(eventData.error || eventData.message || "Generation failed");
+            if (eventName === "step") {
+              if (data.step) setCurrentStep(data.step);
+            } else if (eventName === "log") {
+              setLogs((prev) => [...prev, data.text]);
+            } else if (eventName === "complete") {
+              setResult(data);
+              setIsGenerating(false);
+            } else if (eventName === "error") {
+              setError(data.error);
+              setIsGenerating(false);
             }
           }
         }
       }
     } catch (err) {
       setError(err.message);
-    } finally {
-      setLoading(false);
-      setLibRefresh((n) => n + 1); // refresh library to show new downloads
+      setIsGenerating(false);
     }
-  }
-
-  function connectYoutube() {
-    window.location.href = `${API_BASE}/auth/google`;
-  }
-
-  function handleUseVideo(localPath, filename) {
-    const pathToUse = localPath || filename;
-    const cleanName = filename ? filename.replace(/^(source_|upload_|short_)/, "").replace(/_\d{13}/, "") : pathToUse;
-    setVideoUrl(pathToUse);
-    setUploadState("done");
-    setUploadFilename(cleanName);
-    setResult(null);
-    setError(null);
-    // Scroll intake form smoothly into view
-    setTimeout(() => {
-      intakeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 50);
-  }
+  };
 
   return (
-    <div className="app">
-      <header className="topbar">
-        <div className="brand">
-          <span className="brand-mark">▮▮▶</span>
-          <span className="brand-name">Shortcut</span>
-        </div>
+    <div className="tab-container">
+      <div className="section-card">
+        <h2>✂️ Video Clipper Studio</h2>
+        <p className="card-desc">Paste a long YouTube video link to automatically transcribe, extract viral hooks, and render 9:16 vertical Shorts.</p>
 
-        <div className="topbar-right">
-          {channelAnalytics && (
-            <div className="channel-stats-badge" title="Connected YouTube Channel Analytics">
-              {channelAnalytics.avatar && (
-                <img src={channelAnalytics.avatar} alt="Channel" className="channel-avatar" />
-              )}
-              <div className="channel-info">
-                <span className="channel-name">{channelAnalytics.title}</span>
-                <span className="channel-subscribers">
-                  👥 {channelAnalytics.subscribers} subs &middot; 👁️ {channelAnalytics.views} views
-                </span>
-              </div>
-            </div>
-          )}
-          <button
-            className={`youtube-btn ${youtubeConnected ? "connected" : ""}`}
-            onClick={connectYoutube}
-          >
-            {youtubeConnected ? "YouTube connected ✓" : "Connect YouTube"}
-          </button>
-        </div>
-      </header>
-
-      <main className="app-main">
-        <div className="app-content">
-          <section className="intake" ref={intakeRef}>
-
-          <h1>Paste a link. Get your shorts.</h1>
-          <p className="subtitle">
-            Runs the highlight-detection pipeline on your own machine, no
-            subscription, no watermark.
-          </p>
-
-          <form onSubmit={handleGenerate} className="intake-form">
+        <form onSubmit={handleGenerate} className="clipper-form">
+          <div className="form-group">
+            <label>YouTube Video URL or Local Video Path</label>
             <input
               type="text"
-              placeholder="https://www.youtube.com/watch?v=…"
+              placeholder="https://www.youtube.com/watch?v=..."
               value={videoUrl}
-              onChange={(e) => { setVideoUrl(e.target.value); setUploadState(null); }}
-              disabled={loading}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              required
+              className="input-field"
             />
-            <select
-              value={clipMode}
-              onChange={(e) => setClipMode(e.target.value)}
-              disabled={loading}
-              title="Select clip splitting mode"
-            >
-              <option value="sequential">🎬 Sequential Movie Parts</option>
-              <option value="highlights">✂️ AI Highlights</option>
-            </select>
-            {clipMode === "sequential" && (
-              <select
-                value={partDuration}
-                onChange={(e) => setPartDuration(Number(e.target.value))}
-                disabled={loading}
-                title="Part length"
-              >
-                <option value={120}>2.0m / part</option>
-                <option value={150}>2.5m / part</option>
-                <option value={180}>3.0m / part</option>
-              </select>
-            )}
-            <select
-              value={numClips}
-              onChange={(e) => setNumClips(e.target.value)}
-              disabled={loading}
-            >
-              {[3, 5, 10, 15, 20].map((n) => (
-                <option key={n} value={n}>
-                  {n} parts
-                </option>
-              ))}
-            </select>
-            <button type="submit" disabled={loading || uploadState === "uploading"}>
-              {loading ? "Working…" : "Generate"}
-            </button>
-          </form>
-
-          {/* ─── Upload Drop Zone ─────────────────────────────── */}
-          <div className="upload-divider"><span>or upload a local video</span></div>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm,video/x-m4v,.mp4,.mov,.avi,.mkv,.webm,.m4v"
-            style={{ display: "none" }}
-            onChange={handleFileChange}
-          />
-
-          <div
-            id="upload-drop-zone"
-            className={`upload-dropzone ${
-              dragOver ? "upload-dropzone--drag" : ""
-            } ${
-              uploadState === "done" ? "upload-dropzone--done" : ""
-            } ${
-              uploadState === "uploading" ? "upload-dropzone--uploading" : ""
-            }`}
-            onClick={uploadState !== "uploading" ? handleDropZoneClick : undefined}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
-          >
-            {uploadState === "uploading" && (
-              <div className="upload-dropzone-content">
-                <div className="upload-spinner" />
-                <div className="upload-dropzone-label">Uploading {uploadFilename}…</div>
-                <div className="upload-progress-bar-wrap">
-                  <div className="upload-progress-bar-fill" style={{ width: `${uploadProgress}%` }} />
-                </div>
-                <div className="upload-progress-pct">{uploadProgress}%</div>
-              </div>
-            )}
-            {uploadState === "done" && (
-              <div className="upload-dropzone-content">
-                <span className="upload-done-icon">✓</span>
-                <div className="upload-dropzone-label">{uploadFilename}</div>
-                <div className="upload-dropzone-sublabel">Ready — click Generate above!</div>
-              </div>
-            )}
-            {uploadState === "error" && (
-              <div className="upload-dropzone-content">
-                <span className="upload-error-icon">✕</span>
-                <div className="upload-dropzone-label">Upload failed. Click to retry.</div>
-              </div>
-            )}
-            {(!uploadState) && (
-              <div className="upload-dropzone-content">
-                <svg className="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                </svg>
-                <div className="upload-dropzone-label">Drop a video or <span className="upload-link">click to browse</span></div>
-                <div className="upload-dropzone-sublabel">MP4, MOV, AVI, MKV, WebM · up to 4 GB</div>
-              </div>
-            )}
           </div>
 
-          {(loading || logs.length > 0) && startTime && (
-            <PipelineProgress
-              currentStep={currentStep}
-              stepDetails={stepDetails}
-              stepLabels={stepLabels}
-              isLocalInput={isLocalInput}
-              logs={logs}
-              startTime={startTime}
-              isError={!!error}
-              hasEnded={!!result}
-            />
-          )}
-
-          {error && <p className="error-banner">❌ {error}</p>}
-        </section>
-
-        {result && (
-          <section className="results">
-            <div className="results-header">
-              <span className="content-tag">
-                {result.transcript?.content_type || "video"}
-              </span>
-              <span className="duration-tag">
-                {formatTime(duration)} total
-              </span>
-              {totalElapsed && (
-                <span className="duration-tag">
-                  ⚡ processed in {totalElapsed}s
-                </span>
-              )}
+          <div className="form-row">
+            <div className="form-group">
+              <label>Number of Shorts to Extract</label>
+              <select value={numClips} onChange={(e) => setNumClips(e.target.value)} className="select-field">
+                <option value={1}>1 Short</option>
+                <option value={3}>3 Shorts (Recommended)</option>
+                <option value={5}>5 Shorts</option>
+              </select>
             </div>
 
-            <Timeline highlights={result.shorts || []} duration={duration} />
+            <button type="submit" disabled={isGenerating} className="btn btn-primary">
+              {isGenerating ? "⚡ Extracting Shorts..." : "🚀 Generate Shorts"}
+            </button>
+          </div>
+        </form>
 
-            <div className="clip-grid">
-              {(result.shorts || []).map((clip, i) => (
-                <ClipCard
-                  key={i}
-                  clip={clip}
-                  index={i}
-                  youtubeConnected={youtubeConnected}
-                  onConnectYoutube={connectYoutube}
-                />
+        {isGenerating && (
+          <div className="progress-section">
+            <div className="step-indicator">Active Step: <strong>{currentStep}</strong></div>
+            <div className="log-box">
+              {logs.slice(-6).map((log, i) => (
+                <div key={i} className="log-line">{log}</div>
               ))}
             </div>
-          </section>
+          </div>
         )}
-        </div>
-        <VideoLibrary
-          refreshTrigger={libRefresh}
-          onUse={handleUseVideo}
-          onUploadClip={(v) => setActiveUploadVideo(v)}
-        />
-      </main>
 
-      {activeUploadVideo && (
-        <ClipUploadModal
-          video={activeUploadVideo}
-          youtubeConnected={youtubeConnected}
-          onConnectYoutube={connectYoutube}
-          onClose={() => setActiveUploadVideo(null)}
-        />
-      )}
+        {error && <div className="error-badge">❌ {error}</div>}
+
+        {result && result.shorts && (
+          <div className="results-grid">
+            <h3>🎬 Generated Vertical Shorts</h3>
+            <div className="shorts-list">
+              {result.shorts.map((short, idx) => (
+                <div key={idx} className="short-card">
+                  <div className="short-header">
+                    <span className="viral-score" style={{ background: scoreColor(short.score || 85) }}>
+                      Score: {short.score || 85}/100
+                    </span>
+                    <span className="short-duration">{formatDuration(short.duration || 30)}</span>
+                  </div>
+                  <h4>{short.title || `Short #${idx + 1}`}</h4>
+                  <p className="short-hook">"{short.hook || short.text}"</p>
+                  
+                  {short.clipPath && (
+                    <video controls className="video-player" src={`${API_BASE}/clips/${short.clipPath.split(/[\/\\]/).pop()}`} />
+                  )}
+
+                  <ScheduleBtn API_BASE={API_BASE} videoPath={short.clipPath} title={short.title || `Short #${idx + 1}`} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* =================================================================== */
+/* 2. FACELESS SHORT CREATOR TAB (SHORTGPT ENGINE)                     */
+/* =================================================================== */
+function FacelessTab({ API_BASE }) {
+  const [topic, setTopic] = useState("");
+  const [niche, setNiche] = useState("Space Facts");
+  const [voice, setVoice] = useState("en-US-ChristopherNeural");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [logs, setLogs] = useState([]);
+  const [currentStep, setCurrentStep] = useState("");
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  const handleCreateFaceless = (e) => {
+    e.preventDefault();
+    if (!topic) return;
+
+    setIsGenerating(true);
+    setError(null);
+    setResult(null);
+    setLogs([]);
+    setCurrentStep("Initializing ShortGPT engine...");
+
+    const params = new URLSearchParams({ topic, niche, voice });
+    const es = new EventSource(`${API_BASE}/api/faceless/generate?${params}`);
+
+    es.addEventListener("step", (evt) => {
+      const data = JSON.parse(evt.data);
+      setCurrentStep(data.label);
+    });
+
+    es.addEventListener("log", (evt) => {
+      const data = JSON.parse(evt.data);
+      setLogs((prev) => [...prev, data.text]);
+    });
+
+    es.addEventListener("complete", (evt) => {
+      const data = JSON.parse(evt.data);
+      setResult(data);
+      setIsGenerating(false);
+      es.close();
+    });
+
+    es.addEventListener("error", (evt) => {
+      // EventSource fires error for both SSE errors and connection close
+      if (evt.data) {
+        try {
+          const data = JSON.parse(evt.data);
+          setError(data.error || "Generation failed");
+        } catch {
+          setError("Connection lost during generation");
+        }
+      }
+      setIsGenerating(false);
+      es.close();
+    });
+  };
+
+  return (
+    <div className="tab-container">
+      <div className="section-card">
+        <h2>🤖 Faceless Short Creator (ShortGPT Engine)</h2>
+        <p className="card-desc">Type any topic or prompt to generate an automated script, voiceover (EdgeTTS Neural), background visual assets, and vertical video.</p>
+
+        <form onSubmit={handleCreateFaceless} className="faceless-form">
+          <div className="form-group">
+            <label>Short Topic / Prompt</label>
+            <input
+              type="text"
+              placeholder="e.g. 3 Mind-Blowing Secrets About Black Holes"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              required
+              className="input-field"
+            />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Channel Niche Style</label>
+              <select value={niche} onChange={(e) => setNiche(e.target.value)} className="select-field">
+                <option value="Space Facts">🌌 Space & Science Facts</option>
+                <option value="Dark History">📜 Dark History & Mysteries</option>
+                <option value="Motivation">🔥 Daily Motivation & Wealth</option>
+                <option value="Tech Breakdown">💻 Technology & AI News</option>
+                <option value="Reddit Stories">💬 Reddit Stories & Confessions</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Voiceover Model (EdgeTTS Free Neural)</label>
+              <select value={voice} onChange={(e) => setVoice(e.target.value)} className="select-field">
+                <option value="en-US-ChristopherNeural">Male: Christopher (US Deep & Serious)</option>
+                <option value="en-US-GuyNeural">Male: Guy (US Energetic)</option>
+                <option value="en-US-JennyNeural">Female: Jenny (US Clear & Engaging)</option>
+                <option value="en-GB-RyanNeural">Male: Ryan (British Narrative)</option>
+              </select>
+            </div>
+
+            <button type="submit" disabled={isGenerating} className="btn btn-accent">
+              {isGenerating ? "⏳ Generating Short..." : "✨ Create Faceless Short"}
+            </button>
+          </div>
+        </form>
+
+        {isGenerating && (
+          <div className="progress-section">
+            <div className="step-indicator">Current Stage: <strong>{currentStep}</strong></div>
+            <div className="log-box">
+              {logs.slice(-6).map((log, i) => (
+                <div key={i} className="log-line">{log}</div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {error && <div className="error-badge">❌ {error}</div>}
+
+        {result && (
+          <div className="faceless-result-card">
+            <h3>🎉 Short Created Successfully!</h3>
+
+            <div className="faceless-preview-layout">
+              <div className="player-column">
+                <video
+                  controls
+                  autoPlay
+                  className="video-player"
+                  src={`${API_BASE}/shortgpt-videos/${result.filename}`}
+                />
+                <div className="video-stats-row">
+                  {result.duration && <span className="duration-badge">⏱ {result.duration}s</span>}
+                  <span className="quality-badge">1080×1920 HD</span>
+                </div>
+                <ScheduleBtn API_BASE={API_BASE} videoPath={result.videoPath} filename={result.filename} title={result.title} description={result.description} />
+              </div>
+
+              <div className="metadata-column">
+                {result.thumbnailFilename && (
+                  <div className="meta-box thumbnail-box">
+                    <label><strong>Generated Thumbnail:</strong></label>
+                    <img
+                      src={`${API_BASE}/shortgpt-videos/${result.thumbnailFilename}`}
+                      alt="Video thumbnail"
+                      className="thumbnail-preview"
+                    />
+                  </div>
+                )}
+                <h4>{result.title}</h4>
+                <div className="meta-box">
+                  <label><strong>AI Generated Script:</strong></label>
+                  <p className="script-text">{result.script}</p>
+                </div>
+                <div className="meta-box">
+                  <label><strong>SEO Description:</strong></label>
+                  <p className="script-text" style={{fontSize: "0.85rem", opacity: 0.8}}>{result.description}</p>
+                </div>
+                <div className="meta-box">
+                  <label><strong>Viral Hashtags:</strong></label>
+                  <p className="hashtags">{result.hashtags ? result.hashtags.join(" ") : "#Shorts #Viral"}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* =================================================================== */
+/* 3. AUTO-PILOT SCHEDULER TAB                                         */
+/* =================================================================== */
+function SchedulerTab({ API_BASE }) {
+  const [queue, setQueue] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchQueue = () => {
+    fetch(`${API_BASE}/api/schedule/queue`)
+      .then((res) => res.json())
+      .then((data) => {
+        setQueue(data.queue || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchQueue();
+    const interval = setInterval(fetchQueue, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleDelete = async (id) => {
+    await fetch(`${API_BASE}/api/schedule/${id}`, { method: "DELETE" });
+    fetchQueue();
+  };
+
+  return (
+    <div className="tab-container">
+      <div className="section-card">
+        <h2>📅 Auto-Pilot Scheduler Queue</h2>
+        <p className="card-desc">Manage upcoming automated video posts. The scheduler automatically uploads pending Shorts to YouTube at their designated time.</p>
+
+        {loading ? (
+          <p>Loading schedule queue...</p>
+        ) : queue.length === 0 ? (
+          <div className="empty-state">
+            <p>No scheduled videos in the queue yet.</p>
+            <p className="subtext">Generate a video in the Clipper or Faceless Creator tab and click "Add to Auto-Scheduler".</p>
+          </div>
+        ) : (
+          <table className="schedule-table">
+            <thead>
+              <tr>
+                <th>Video Title</th>
+                <th>Scheduled Time</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {queue.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <strong>{item.title}</strong>
+                    <div className="table-filename">{item.filename}</div>
+                  </td>
+                  <td>{new Date(item.scheduledAt).toLocaleString()}</td>
+                  <td>
+                    <span className={`status-pill status-pill--${item.status}`}>
+                      {item.status === "published" ? "✓ Published" : "⏰ Scheduled"}
+                    </span>
+                  </td>
+                  <td>
+                    <button onClick={() => handleDelete(item.id)} className="btn-icon-danger">
+                      🗑 Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* =================================================================== */
+/* 4. MONETIZATION & NICHE STUDIO TAB                                 */
+/* =================================================================== */
+function MonetizationTab() {
+  return (
+    <div className="tab-container">
+      <div className="section-card">
+        <h2>💡 YouTube Monetization & Niche Studio</h2>
+        <p className="card-desc">Target high-RPM niches and follow YouTube's official Partner Program policies to ensure your automated channel gets approved for monetization.</p>
+
+        <div className="niche-grid">
+          <div className="niche-card">
+            <h3>💰 Top High-RPM Niches (Est. $4 - $12 RPM)</h3>
+            <ul>
+              <li><strong>Finance & Money Secrets</strong>: Daily tips on saving, investing, and side hustles.</li>
+              <li><strong>Technology & AI News</strong>: Latest tech breakthroughs, AI tools, and future trends.</li>
+              <li><strong>Space & Dark Science</strong>: Deep space mysteries, black holes, and physics facts.</li>
+              <li><strong>Dark History & Crime</strong>: Historical facts, ancient secrets, and investigative stories.</li>
+            </ul>
+          </div>
+
+          <div className="niche-card">
+            <h3>🛡️ YouTube Monetization Rules Checklist</h3>
+            <ul className="checklist">
+              <li>✅ <strong>Use Natural Voices</strong>: EdgeTTS neural or human voiceovers pass human quality review.</li>
+              <li>✅ <strong>Add Value & Story</strong>: Ensure every Short has a script hook and educational/entertainment value.</li>
+              <li>✅ <strong>Avoid Raw Reused Footage</strong>: Combine stock imagery, text overlays, and audio to make content unique.</li>
+              <li>✅ <strong>High Retention Hook</strong>: Keep script hooks under 3 seconds to maximize view percentage.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Helper Component: Schedule Button */
+function ScheduleBtn({ API_BASE, videoPath, filename, title, description }) {
+  const [scheduled, setScheduled] = useState(false);
+
+  const handleAdd = async () => {
+    try {
+      await fetch(`${API_BASE}/api/schedule/add`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          videoPath,
+          filename: filename || videoPath,
+          title: title || "Automated Short",
+          description: description || "#Shorts",
+          scheduledAt: new Date(Date.now() + 3600 * 1000).toISOString(),
+        }),
+      });
+      setScheduled(true);
+    } catch (e) {
+      alert("Failed to schedule video");
+    }
+  };
+
+  return (
+    <button onClick={handleAdd} disabled={scheduled} className="btn btn-secondary btn-block">
+      {scheduled ? "✓ Added to Auto-Scheduler" : "📅 Add to Auto-Scheduler"}
+    </button>
+  );
+}
+
+/* =================================================================== */
+/* 5. STORAGE MANAGER TAB                                              */
+/* =================================================================== */
+function StorageTab({ API_BASE }) {
+  const [data, setData] = useState({ files: [], totalFiles: 0, totalSizeLabel: "0 B", categoryTotals: {} });
+  const [loading, setLoading] = useState(true);
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [confirmClear, setConfirmClear] = useState(null);
+
+  const fetchStorage = () => {
+    fetch(`${API_BASE}/api/storage/all`)
+      .then((res) => res.json())
+      .then((resData) => {
+        setData(resData);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchStorage();
+  }, []);
+
+  const handleDeleteFile = async (file) => {
+    try {
+      await fetch(`${API_BASE}/api/storage/file?source=${encodeURIComponent(file.source)}&filename=${encodeURIComponent(file.filename)}`, {
+        method: "DELETE",
+      });
+      fetchStorage();
+    } catch {
+      alert("Failed to delete file");
+    }
+  };
+
+  const handleClearCategory = async (cat) => {
+    try {
+      await fetch(`${API_BASE}/api/storage/clear-category`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: cat }),
+      });
+      setConfirmClear(null);
+      fetchStorage();
+    } catch {
+      alert("Failed to clear storage category");
+    }
+  };
+
+  const filteredFiles = useMemo(() => {
+    if (filterCategory === "all") return data.files || [];
+    return (data.files || []).filter((f) => f.category === filterCategory);
+  }, [data.files, filterCategory]);
+
+  return (
+    <div className="tab-container">
+      <div className="section-card">
+        <h2>💾 Disk Storage Manager</h2>
+        <p className="card-desc">Monitor generated videos, audio tracks, thumbnails, and subtitle files. Clear unwanted files to free up disk space.</p>
+
+        {/* Summary Dashboard Header */}
+        <div className="storage-summary-grid">
+          <div className="storage-stat-card storage-stat-card--total">
+            <span className="stat-icon">💽</span>
+            <div>
+              <div className="stat-value">{data.totalSizeLabel}</div>
+              <div className="stat-label">Total Storage Used ({data.totalFiles} Files)</div>
+            </div>
+          </div>
+
+          <div className="storage-stat-card">
+            <span className="stat-icon">🎬</span>
+            <div>
+              <div className="stat-value">{data.categoryTotals?.video || "0 B"}</div>
+              <div className="stat-label">Videos (.mp4)</div>
+            </div>
+          </div>
+
+          <div className="storage-stat-card">
+            <span className="stat-icon">🎵</span>
+            <div>
+              <div className="stat-value">{data.categoryTotals?.audio || "0 B"}</div>
+              <div className="stat-label">Audio (.mp3)</div>
+            </div>
+          </div>
+
+          <div className="storage-stat-card">
+            <span className="stat-icon">🖼️</span>
+            <div>
+              <div className="stat-value">{data.categoryTotals?.thumbnail || "0 B"}</div>
+              <div className="stat-label">Thumbnails (.jpg)</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Action Controls */}
+        <div className="storage-actions-bar">
+          <div className="filter-pill-group">
+            {["all", "video", "audio", "thumbnail", "subtitle"].map((cat) => (
+              <button
+                key={cat}
+                className={`filter-pill ${filterCategory === cat ? "filter-pill--active" : ""}`}
+                onClick={() => setFilterCategory(cat)}
+              >
+                {cat === "all" && "📁 All Files"}
+                {cat === "video" && "🎬 Videos"}
+                {cat === "audio" && "🎵 Audio"}
+                {cat === "thumbnail" && "🖼️ Thumbnails"}
+                {cat === "subtitle" && "💬 Subtitles"}
+              </button>
+            ))}
+          </div>
+
+          <div className="clear-btn-group">
+            <button className="btn btn-secondary btn-sm" onClick={() => setConfirmClear("audio")}>
+              🧹 Clear Audio Files
+            </button>
+            <button className="btn btn-danger btn-sm" onClick={() => setConfirmClear("all")}>
+              🚨 Clear ALL Storage
+            </button>
+          </div>
+        </div>
+
+        {/* Confirmation Modal/Banner */}
+        {confirmClear && (
+          <div className="confirm-banner">
+            <span>⚠️ Are you sure you want to delete <strong>{confirmClear === "all" ? "ALL generated files" : `all ${confirmClear} files`}</strong>?</span>
+            <div className="confirm-banner-btns">
+              <button className="btn btn-danger btn-sm" onClick={() => handleClearCategory(confirmClear)}>Yes, Delete Now</button>
+              <button className="btn btn-secondary btn-sm" onClick={() => setConfirmClear(null)}>Cancel</button>
+            </div>
+          </div>
+        )}
+
+        {/* Storage Files List Table */}
+        {loading ? (
+          <p>Loading storage details...</p>
+        ) : filteredFiles.length === 0 ? (
+          <div className="empty-queue">
+            <span>✨ No files found in this category. Disk space is clear!</span>
+          </div>
+        ) : (
+          <div className="storage-table-wrapper">
+            <table className="storage-table">
+              <thead>
+                <tr>
+                  <th>File Name</th>
+                  <th>Source Engine</th>
+                  <th>Category</th>
+                  <th>Size</th>
+                  <th>Date Created</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredFiles.map((file) => (
+                  <tr key={file.id}>
+                    <td>
+                      <a href={`${API_BASE}${file.url}`} target="_blank" rel="noreferrer" className="file-link">
+                        {file.filename}
+                      </a>
+                    </td>
+                    <td><span className="source-tag">{file.source}</span></td>
+                    <td>
+                      <span className={`cat-badge cat-badge--${file.category}`}>
+                        {file.category.toUpperCase()}
+                      </span>
+                    </td>
+                    <td><strong>{file.sizeLabel}</strong></td>
+                    <td className="date-cell">{file.dateFormatted}</td>
+                    <td>
+                      <button
+                        onClick={() => handleDeleteFile(file)}
+                        className="btn btn-danger btn-xs"
+                        title="Delete File"
+                      >
+                        🗑️ Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
