@@ -390,7 +390,15 @@ function FacelessTab({ API_BASE }) {
                   {result.duration && <span className="duration-badge">⏱ {result.duration}s</span>}
                   <span className="quality-badge">1080×1920 HD</span>
                 </div>
-                <ScheduleBtn API_BASE={API_BASE} videoPath={result.videoPath} filename={result.filename} title={result.title} description={result.description} />
+                <ScheduleBtn
+                  API_BASE={API_BASE}
+                  videoPath={result.videoPath}
+                  filename={result.filename}
+                  thumbnailPath={result.thumbnailPath}
+                  thumbnailFilename={result.thumbnailFilename}
+                  title={result.title}
+                  description={result.description}
+                />
               </div>
 
               <div className="metadata-column">
@@ -565,9 +573,186 @@ function ScheduleBtn({ API_BASE, videoPath, filename, title, description }) {
   };
 
   return (
-    <button onClick={handleAdd} disabled={scheduled} className="btn btn-secondary btn-block">
-      {scheduled ? "✓ Added to Auto-Scheduler" : "📅 Add to Auto-Scheduler"}
-    </button>
+    <div className="btn-group-stacked">
+      <button onClick={handleAdd} disabled={scheduled} className="btn btn-secondary btn-block">
+        {scheduled ? "✓ Added to Auto-Scheduler" : "📅 Add to Auto-Scheduler"}
+      </button>
+      <PublishBtn API_BASE={API_BASE} videoPath={videoPath} filename={filename} title={title} description={description} />
+    </div>
+  );
+}
+
+/* Helper Component: YouTube Studio Direct Publisher Button & Modal */
+function PublishBtn({ API_BASE, videoPath, filename, thumbnailPath, thumbnailFilename, title, description }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      <button onClick={() => setIsOpen(true)} className="btn btn-accent btn-block" style={{ marginTop: "6px" }}>
+        🚀 Publish to YouTube Studio
+      </button>
+      {isOpen && (
+        <PublishModal
+          API_BASE={API_BASE}
+          videoPath={videoPath}
+          filename={filename}
+          thumbnailPath={thumbnailPath}
+          thumbnailFilename={thumbnailFilename}
+          initialTitle={title}
+          initialDescription={description}
+          onClose={() => setIsOpen(false)}
+        />
+      )}
+    </>
+  );
+}
+
+function PublishModal({ API_BASE, videoPath, filename, thumbnailPath, thumbnailFilename, initialTitle, initialDescription, onClose }) {
+  const [title, setTitle] = useState(initialTitle || "New Short #Shorts");
+  const [description, setDescription] = useState(initialDescription || "#Shorts");
+  const [privacyStatus, setPrivacyStatus] = useState("public");
+  const [categoryId, setCategoryId] = useState("28");
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    setIsUploading(true);
+    setError(null);
+    setUploadResult(null);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/youtube/upload`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          videoPath,
+          filename,
+          thumbnailPath,
+          thumbnailFilename,
+          title,
+          description,
+          privacyStatus,
+          categoryId,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Upload failed");
+      }
+
+      setUploadResult(data);
+      setIsUploading(false);
+    } catch (err) {
+      setError(err.message);
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content yt-studio-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>▶️ YouTube Studio Publisher</h3>
+          <button onClick={onClose} className="modal-close-btn">✕</button>
+        </div>
+
+        {uploadResult ? (
+          <div className="upload-success-card">
+            <span className="success-icon">🎉</span>
+            <h3>Short Published to YouTube!</h3>
+            <p className="success-subtitle">Your video is now live on your YouTube channel.</p>
+
+            <div className="url-box">
+              <label>YouTube Short URL:</label>
+              <a href={uploadResult.url} target="_blank" rel="noreferrer" className="url-link">
+                {uploadResult.url}
+              </a>
+            </div>
+
+            {uploadResult.thumbnailUploaded && (
+              <div className="thumb-success-badge">✓ Custom thumbnail set successfully</div>
+            )}
+
+            <div className="modal-action-row" style={{ marginTop: "20px" }}>
+              <a href={uploadResult.url} target="_blank" rel="noreferrer" className="btn btn-accent">
+                ▶️ Watch Short on YouTube
+              </a>
+              <a href={uploadResult.studioUrl} target="_blank" rel="noreferrer" className="btn btn-secondary">
+                ✏️ Edit in YouTube Studio
+              </a>
+              <button onClick={onClose} className="btn btn-secondary">Close</button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleUpload} className="yt-upload-form">
+            <div className="form-group">
+              <label>
+                Short Title <span className="char-count">({title.length}/100)</span>
+              </label>
+              <input
+                type="text"
+                value={title}
+                maxLength={100}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+                className="input-field"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Description & Hashtags</label>
+              <textarea
+                value={description}
+                rows={4}
+                onChange={(e) => setDescription(e.target.value)}
+                className="textarea-field"
+              />
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Visibility</label>
+                <select value={privacyStatus} onChange={(e) => setPrivacyStatus(e.target.value)} className="select-field">
+                  <option value="public">🌐 Public (Immediate Live)</option>
+                  <option value="unlisted">🔗 Unlisted (Link Only)</option>
+                  <option value="private">🔒 Private (Draft)</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>YouTube Category</label>
+                <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="select-field">
+                  <option value="28">💻 Science & Technology</option>
+                  <option value="24">🎭 Entertainment</option>
+                  <option value="20">🎮 Gaming</option>
+                  <option value="27">📚 Education</option>
+                  <option value="22">👤 People & Blogs</option>
+                </select>
+              </div>
+            </div>
+
+            {error && (
+              <div className="error-badge" style={{ marginTop: "12px" }}>
+                ❌ {error}
+              </div>
+            )}
+
+            <div className="modal-action-row" style={{ marginTop: "20px" }}>
+              <button type="submit" disabled={isUploading} className="btn btn-accent">
+                {isUploading ? "⏳ Uploading to YouTube..." : "🚀 Upload Video Now"}
+              </button>
+              <button type="button" onClick={onClose} disabled={isUploading} className="btn btn-secondary">
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
   );
 }
 

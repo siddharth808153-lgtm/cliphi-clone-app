@@ -83,27 +83,44 @@ router.post("/youtube/generate-seo", (req, res) => {
   });
 });
 
-// Upload clip directly to YouTube
+// Upload video directly to YouTube Studio with optional custom thumbnail
 router.post("/youtube/upload", async (req, res) => {
-  const { filename, title, description, privacyStatus } = req.body;
+  const { videoPath, filename, thumbnailPath, thumbnailFilename, title, description, privacyStatus = "public", categoryId = "28", tags = [] } = req.body;
 
   if (!req.session || !req.session.youtubeTokens) {
     return res
       .status(401)
       .json({ error: "YouTube not connected. Click 'Connect YouTube' first." });
   }
-  if (!filename) {
-    return res.status(400).json({ error: "filename is required" });
+
+  // Resolve target video file path
+  let targetVideoPath = videoPath;
+
+  if (!targetVideoPath && filename) {
+    // Search in ShortGPT videos directory first, then Clipper output
+    const shortgptPath = path.join(__dirname, "..", "..", "ShortGPT", "videos", filename);
+    const clipperOutputDir = path.join(
+      process.env.PYTHON_PROJECT_DIR || "",
+      process.env.LOCAL_OUTPUT_DIR || "output"
+    );
+    const clipperPath = path.join(clipperOutputDir, filename);
+
+    if (fs.existsSync(shortgptPath)) {
+      targetVideoPath = shortgptPath;
+    } else if (fs.existsSync(clipperPath)) {
+      targetVideoPath = clipperPath;
+    }
   }
 
-  const outputDir = path.join(
-    process.env.PYTHON_PROJECT_DIR || "",
-    process.env.LOCAL_OUTPUT_DIR || "output"
-  );
-  const filePath = path.join(outputDir, filename);
+  if (!targetVideoPath || !fs.existsSync(targetVideoPath)) {
+    return res.status(404).json({ error: `Video file not found: ${targetVideoPath || filename}` });
+  }
 
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ error: `Clip file not found: ${filePath}` });
+  // Resolve thumbnail file path if provided
+  let targetThumbPath = thumbnailPath;
+  if (!targetThumbPath && thumbnailFilename) {
+    const thumbCandidate = path.join(__dirname, "..", "..", "ShortGPT", "videos", thumbnailFilename);
+    if (fs.existsSync(thumbCandidate)) targetThumbPath = thumbCandidate;
   }
 
   const oauth2Client = getOAuthClient();
@@ -111,13 +128,15 @@ router.post("/youtube/upload", async (req, res) => {
   const youtube = google.youtube({ version: "v3", auth: oauth2Client });
 
   try {
+    console.log(`[youtube-upload] Uploading video to YouTube Studio: ${targetVideoPath}`);
     const response = await youtube.videos.insert({
       part: ["snippet", "status"],
       requestBody: {
         snippet: {
-          title: title || "New Short #Shorts",
-          description: description || "Uploaded via Shortcut App #Shorts",
-          categoryId: "22",
+          title: (title || "New Short #Shorts").slice(0, 100),
+          description: description || "Uploaded via YouTube Automation Studio #Shorts",
+          categoryId: categoryId || "28", // Science & Tech
+          tags: tags.length ? tags : ["Shorts", "YouTubeShorts", "Viral"],
         },
         status: {
           privacyStatus: privacyStatus || "public",
@@ -125,16 +144,39 @@ router.post("/youtube/upload", async (req, res) => {
         },
       },
       media: {
-        body: fs.createReadStream(filePath),
+        body: fs.createReadStream(targetVideoPath),
       },
     });
 
     const videoId = response.data.id;
+    let thumbnailUploaded = false;
+
+    // Upload custom thumbnail if thumbnail path exists
+    if (targetThumbPath && fs.existsSync(targetThumbPath)) {
+      try {
+        console.log(`[youtube-upload] Setting custom thumbnail for video ${videoId}...`);
+        await youtube.thumbnails.set({
+          videoId,
+          media: {
+            body: fs.createReadStream(targetThumbPath),
+          },
+        });
+        thumbnailUploaded = true;
+      } catch (thumbErr) {
+        console.warn(`[youtube-upload] Thumbnail upload warning (channel may require phone verification for custom thumbnails): ${thumbErr.message}`);
+      }
+    }
+
     res.json({
+      success: true,
       videoId,
       url: `https://youtube.com/shorts/${videoId}`,
+      watchUrl: `https://www.youtube.com/watch?v=${videoId}`,
+      studioUrl: `https://studio.youtube.com/video/${videoId}/edit`,
+      thumbnailUploaded,
     });
   } catch (err) {
+    console.error("[youtube-upload] YouTube upload error:", err);
     res.status(500).json({ error: err.message || "YouTube upload failed" });
   }
 });
