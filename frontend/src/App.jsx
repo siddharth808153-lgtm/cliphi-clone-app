@@ -96,6 +96,7 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [ytConnected, setYtConnected] = useState(false);
   const [selectedNiche, setSelectedNiche] = useState(null);
+  const [selectedTopic, setSelectedTopic] = useState("");
 
   // Check YouTube connection & selected niche
   useEffect(() => {
@@ -111,6 +112,12 @@ export default function App() {
       })
       .catch(() => {});
   }, []);
+
+  const handleLaunchFacelessWithTopic = (topicText, nicheObj) => {
+    if (topicText) setSelectedTopic(topicText);
+    if (nicheObj) setSelectedNiche(nicheObj);
+    setActiveTab("faceless");
+  };
 
   const getTabTitle = (tab) => {
     switch (tab) {
@@ -261,11 +268,11 @@ export default function App() {
 
         {/* Content Area */}
         <main className="content-area">
-          {activeTab === "overview" && <OverviewTab API_BASE={API_BASE} setActiveTab={setActiveTab} selectedNiche={selectedNiche} />}
-          {activeTab === "niche_scout" && <NicheScoutTab API_BASE={API_BASE} setActiveTab={setActiveTab} onSelectNiche={setSelectedNiche} />}
+          {activeTab === "overview" && <OverviewTab API_BASE={API_BASE} setActiveTab={setActiveTab} selectedNiche={selectedNiche} onLaunchFaceless={handleLaunchFacelessWithTopic} />}
+          {activeTab === "niche_scout" && <NicheScoutTab API_BASE={API_BASE} setActiveTab={setActiveTab} onSelectNiche={setSelectedNiche} onLaunchFaceless={handleLaunchFacelessWithTopic} />}
           {activeTab === "trending" && <TrendingTab API_BASE={API_BASE} />}
           {activeTab === "clipper" && <ClipperTab API_BASE={API_BASE} />}
-          {activeTab === "faceless" && <FacelessTab API_BASE={API_BASE} selectedNiche={selectedNiche} />}
+          {activeTab === "faceless" && <FacelessTab API_BASE={API_BASE} selectedTopic={selectedTopic} selectedNiche={selectedNiche} />}
           {activeTab === "channels" && <ChannelsTab API_BASE={API_BASE} />}
           {activeTab === "autodev" && <AutoDevTab API_BASE={API_BASE} />}
           {activeTab === "scheduler" && <SchedulerTab API_BASE={API_BASE} />}
@@ -682,7 +689,43 @@ function ClipperTab({ API_BASE }) {
 /* =================================================================== */
 /* 2. FACELESS SHORT CREATOR TAB (SHORTGPT ENGINE)                     */
 /* =================================================================== */
-function FacelessTab({ API_BASE }) {
+const RANDOM_VIRAL_IDEAS = [
+  { topic: "3 Quantum Computing Secrets That Will Replace Supercomputers", niche: "AI & Technology" },
+  { topic: "Why 80% of Earth's Ocean Remains Completely Unexplored", niche: "Unsolved Ocean Mysteries" },
+  { topic: "3 Marcus Aurelius Rules to Become Unshakable", niche: "Stoic Mindset" },
+  { topic: "3 Terrifying Creatures Discovered at the Bottom of Mariana Trench", niche: "Unsolved Ocean Mysteries" },
+  { topic: "3 Free AI Tools That Make You $100 a Day Passively", niche: "AI Wealth & Side Hustles" },
+  { topic: "Why Google's Quantum Computer Scares Cybersecurity Experts", niche: "AI & Technology" },
+  { topic: "The Dark Psychology Trick People Use to Manipulate You", niche: "Stoic Mindset" },
+  { topic: "3 Ancient Monsters That Were Actually Real", niche: "Ancient Mythical Creatures" },
+  { topic: "How AI and Quantum Chips Will Change Everything by 2030", niche: "AI & Technology" },
+  { topic: "Why Ancient Civilizations Built Giant Underground Cities", niche: "Ancient Mythical Creatures" },
+  { topic: "The Unexplained Metallic Sound Coming From the Pacific Ocean Floor", niche: "Unsolved Ocean Mysteries" },
+  { topic: "3 Mind-Blowing Secrets About Black Holes", niche: "Space Facts" },
+  { topic: "Smart Cat Tricks Owner to Steal Unlimited Snacks", niche: "Animated Cat Tales" },
+  { topic: "Monkey vs Robot: Smart Animal Outsmarts High Tech Trap", niche: "Smart Animal Pranks" }
+];
+
+function mapScoutedNicheToSelect(scouted) {
+  if (!scouted) return "Space Facts";
+  const title = typeof scouted === "string" ? scouted : scouted.title || scouted.nicheGroup || scouted.niche || "";
+  if (/quantum|ai fusion|tech/i.test(title)) return "AI & Technology";
+  if (/ocean|sea|water/i.test(title)) return "Unsolved Ocean Mysteries";
+  if (/stoic|mindset|psychology/i.test(title)) return "Stoic Mindset";
+  if (/wealth|money|hustle|automation/i.test(title)) return "AI Wealth & Side Hustles";
+  if (/myth|ancient|creature/i.test(title)) return "Ancient Mythical Creatures";
+  if (/dark history|history/i.test(title)) return "Dark History";
+  if (/motivation/i.test(title)) return "Motivation";
+  if (/cat/i.test(title)) return "Animated Cat Tales";
+  if (/animal|monkey/i.test(title)) return "Smart Animal Pranks";
+  if (/space|science/i.test(title)) return "Space Facts";
+  return "Space Facts";
+}
+
+/* =================================================================== */
+/* 2. FACELESS SHORT CREATOR TAB (SHORTGPT ENGINE)                     */
+/* =================================================================== */
+function FacelessTab({ API_BASE, selectedTopic, selectedNiche }) {
   const [topic, setTopic] = useState("");
   const [niche, setNiche] = useState("Space Facts");
   const [voice, setVoice] = useState("en-US-ChristopherNeural");
@@ -691,6 +734,25 @@ function FacelessTab({ API_BASE }) {
   const [currentStep, setCurrentStep] = useState("");
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (selectedTopic) {
+      setTopic(selectedTopic);
+    }
+  }, [selectedTopic]);
+
+  useEffect(() => {
+    if (selectedNiche) {
+      const mapped = mapScoutedNicheToSelect(selectedNiche);
+      setNiche(mapped);
+    }
+  }, [selectedNiche]);
+
+  const handlePickRandomIdea = () => {
+    const random = RANDOM_VIRAL_IDEAS[Math.floor(Math.random() * RANDOM_VIRAL_IDEAS.length)];
+    setTopic(random.topic);
+    setNiche(random.niche);
+  };
 
   const handleCreateFaceless = async (e) => {
     e.preventDefault();
@@ -731,7 +793,16 @@ function FacelessTab({ API_BASE }) {
 
         <form onSubmit={handleCreateFaceless} className="faceless-form">
           <div className="form-group">
-            <label>Short Topic / Prompt</label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+              <label style={{ margin: 0 }}>Short Topic / Prompt</label>
+              <button
+                type="button"
+                onClick={handlePickRandomIdea}
+                className="btn btn-secondary btn-xs"
+              >
+                🎲 Random Viral Idea
+              </button>
+            </div>
             <input
               type="text"
               placeholder="e.g. 3 Mind-Blowing Secrets About Black Holes"
@@ -746,13 +817,18 @@ function FacelessTab({ API_BASE }) {
             <div className="form-group">
               <label>Channel Niche Style</label>
               <select value={niche} onChange={(e) => setNiche(e.target.value)} className="select-field">
-                <option value="Animated Cat Tales">🐱 3D Animated Cat Tales (Manoranjan Style)</option>
-                <option value="Smart Animal Pranks">🐵 Smart Monkey & Animal Pranks</option>
-                <option value="Hindi Story Shorts">🇮🇳 Hindi Funny Story Shorts</option>
-                <option value="Space Facts">🌌 Space & Science Facts</option>
+                <option value="Space Facts">🌌 Space & Science Secrets</option>
+                <option value="AI & Technology">⚡ Quantum Computing & AI Fusion</option>
+                <option value="Unsolved Ocean Mysteries">🌊 Unsolved Deep Ocean Mysteries</option>
+                <option value="Stoic Mindset">🏛️ Stoic Mindset & Dark Psychology</option>
+                <option value="AI Wealth & Side Hustles">💵 AI Wealth & Automation Hacks</option>
+                <option value="Ancient Mythical Creatures">🏺 Ancient Mythical Creatures & History</option>
                 <option value="Dark History">📜 Dark History & Mysteries</option>
                 <option value="Motivation">🔥 Daily Motivation & Wealth</option>
                 <option value="Tech Breakdown">💻 Technology & AI News</option>
+                <option value="Animated Cat Tales">🐱 3D Animated Cat Tales</option>
+                <option value="Smart Animal Pranks">🐵 Smart Monkey & Animal Pranks</option>
+                <option value="Hindi Story Shorts">🇮🇳 Hindi Funny Story Shorts</option>
                 <option value="Reddit Stories">💬 Reddit Stories & Confessions</option>
               </select>
             </div>
@@ -2449,7 +2525,7 @@ function OverviewTab({ API_BASE, setActiveTab, selectedNiche }) {
 /* =================================================================== */
 /* 9. NICHE SCOUT AI AGENT TAB (LIVE WEB TREND RESEARCH)               */
 /* =================================================================== */
-function NicheScoutTab({ API_BASE, setActiveTab, onSelectNiche }) {
+function NicheScoutTab({ API_BASE, setActiveTab, onSelectNiche, onLaunchFaceless }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -2542,7 +2618,10 @@ function NicheScoutTab({ API_BASE, setActiveTab, onSelectNiche }) {
               {data.selectedNiche.suggestedTopics.map((top, idx) => (
                 <li key={idx}>
                   <span>{top}</span>
-                  <button onClick={() => setActiveTab("faceless")} className="btn btn-secondary btn-xs">
+                  <button
+                    onClick={() => onLaunchFaceless ? onLaunchFaceless(top, data.selectedNiche) : setActiveTab("faceless")}
+                    className="btn btn-secondary btn-xs"
+                  >
                     ⚡ Generate Video
                   </button>
                 </li>
