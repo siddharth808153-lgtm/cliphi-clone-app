@@ -337,6 +337,9 @@ function FacelessTab({ API_BASE }) {
             <div className="form-group">
               <label>Channel Niche Style</label>
               <select value={niche} onChange={(e) => setNiche(e.target.value)} className="select-field">
+                <option value="Animated Cat Tales">🐱 3D Animated Cat Tales (Manoranjan Style)</option>
+                <option value="Smart Animal Pranks">🐵 Smart Monkey & Animal Pranks</option>
+                <option value="Hindi Story Shorts">🇮🇳 Hindi Funny Story Shorts</option>
                 <option value="Space Facts">🌌 Space & Science Facts</option>
                 <option value="Dark History">📜 Dark History & Mysteries</option>
                 <option value="Motivation">🔥 Daily Motivation & Wealth</option>
@@ -346,12 +349,14 @@ function FacelessTab({ API_BASE }) {
             </div>
 
             <div className="form-group">
-              <label>Voiceover Model (EdgeTTS Free Neural)</label>
+              <label>Voiceover Model (Free Neural Storyteller)</label>
               <select value={voice} onChange={(e) => setVoice(e.target.value)} className="select-field">
-                <option value="en-US-ChristopherNeural">Male: Christopher (US Deep & Serious)</option>
-                <option value="en-US-GuyNeural">Male: Guy (US Energetic)</option>
-                <option value="en-US-JennyNeural">Female: Jenny (US Clear & Engaging)</option>
-                <option value="en-GB-RyanNeural">Male: Ryan (British Narrative)</option>
+                <option value="hi-IN-MadhurNeural">🇮🇳 Hindi Male: Madhur (Comic Storyteller)</option>
+                <option value="hi-IN-SwaraNeural">🇮🇳 Hindi Female: Swara (Storyteller)</option>
+                <option value="en-US-ChristopherNeural">🇺🇸 English Male: Christopher (Deep & Serious)</option>
+                <option value="en-US-GuyNeural">🇺🇸 English Male: Guy (Energetic)</option>
+                <option value="en-US-JennyNeural">🇺🇸 English Female: Jenny (Clear & Engaging)</option>
+                <option value="en-GB-RyanNeural">🇬🇧 English Male: Ryan (British Narrative)</option>
               </select>
             </div>
 

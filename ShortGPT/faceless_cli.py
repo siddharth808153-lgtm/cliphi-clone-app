@@ -8,6 +8,12 @@ import subprocess
 import time
 from pathlib import Path
 
+# Force UTF-8 encoding for Windows console output
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
+
 CURRENT_DIR = Path(__file__).parent.resolve()
 sys.path.append(str(CURRENT_DIR))
 
@@ -24,7 +30,21 @@ def generate_script_llm(topic, niche):
     gemini_key = os.getenv("GEMINI_API_KEY")
     openai_key = os.getenv("OPENAI_API_KEY")
 
-    prompt = f"""Write an engaging, high-retention 30-45 second YouTube Short script about: '{topic}'.
+    is_animated = "Animated" in niche or "Cat" in niche or "Story" in niche or "Hindi" in niche
+
+    if is_animated:
+        prompt = f"""Write a hilarious 35-45 second animated cartoon story script for YouTube Shorts about: '{topic}'.
+Style/Niche: {niche}.
+Characters: Funny 3D animals (e.g. Fat Orange Cat, Clever Monkey, Greedy Pig).
+Language: If niche contains 'Hindi', write in natural conversational Hindi script (Devanagari or Hinglish). Otherwise English.
+Rules:
+1. Start with an entertaining hook line.
+2. Deliver a fast-paced comedic story with a funny twist or lesson.
+3. End with a Call To Action to Subscribe.
+4. Keep each sentence on a separate line.
+"""
+    else:
+        prompt = f"""Write an engaging, high-retention 30-45 second YouTube Short script about: '{topic}'.
 Style/Niche: {niche}.
 Rules:
 1. Start with an irresistible hook in the first line.
@@ -54,7 +74,7 @@ Rules:
             completion = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "You are an expert viral YouTube Shorts scriptwriter."},
+                    {"role": "system", "content": "You are an expert viral YouTube Shorts scriptwriter for animated stories."},
                     {"role": "user", "content": prompt}
                 ]
             )
@@ -64,14 +84,23 @@ Rules:
 
     log_step("script", "Using intelligent template engine for script creation...")
     t = topic.strip()
+    if "Hindi" in niche or "Cat" in niche:
+        return (
+            f"एक बार की बात है, {t} में एक बहुत ही चालाक मोटा बिल्ला रहता था!\n"
+            f"वह रोज जंगल के दूसरे जानवरों को अपनी चतुराई से बेवकूफ बनाता था।\n"
+            f"लेकिन एक दिन बंदर गोलू ने बिल्ले को सबक सिखाने की एक जबरदस्त योजना बनाई!\n"
+            f"जब बिल्ला मलाई खाने पहुंचा, तो गोलू ने डिब्बे का ढक्कन बंद कर दिया और बिल्ला फंस गया!\n"
+            f"यह देखकर सब जानवर जोर-जोर से हंसने लगे!\n"
+            f"अगर आपको यह मजेदार कहानी पसंद आई तो वीडियो को लाइक करें और चैनल को सब्सक्राइब करें!"
+        )
     return (
-        f"Did you know this about {t}?\n"
-        f"Here are three mind-blowing facts you probably never heard of.\n"
-        f"First, {t} has secrets that scientists are still uncovering today.\n"
-        f"Second, the way {t} affects our everyday world is far greater than most people realize.\n"
-        f"And third, if you look closer at {t}, it completely changes how you see everything!\n"
-        f"Which fact surprised you the most?\n"
-        f"Drop a comment below and hit subscribe for more daily knowledge!"
+        f"Once upon a time, in a world of {t}, there lived a super smart 3D Fat Cat!\n"
+        f"Every single day, he pulled the funniest pranks on his animal best friends.\n"
+        f"First, he tricked the greedy pig into hiding all his snacks in a secret tree hole.\n"
+        f"Second, when the clever monkey found out, they teamed up for the ultimate payback!\n"
+        f"And third, the lesson learned completely turned the entire forest upside down!\n"
+        f"Which character was your favorite?\n"
+        f"Drop a comment below and hit subscribe for more daily animated short stories!"
     )
 
 
