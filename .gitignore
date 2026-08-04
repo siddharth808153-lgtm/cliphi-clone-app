@@ -35,5 +35,7 @@ Thumbs.db
 *.ytdl
 ShortGPT/videos/*
 !ShortGPT/videos/.gitignore
+ShortGPT/.database/
 ShortGPT/*.json
+
 
