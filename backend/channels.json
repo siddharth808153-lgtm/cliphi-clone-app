@@ -1,0 +1,44 @@
+[
+  {
+    "id": "ch_space_01",
+    "name": "Space & Science Shorts",
+    "handle": "@SpaceScienceShorts",
+    "avatar": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=150&h=150&fit=crop",
+    "subscribers": 42500,
+    "totalViews": 1850000,
+    "niche": "Space & Science",
+    "status": "connected",
+    "primaryLang": "English",
+    "optimalPostingTime": "6:30 PM EST",
+    "targetAudience": "US, UK, CA (Age 18-34)",
+    "avgRetention": "74.2%"
+  },
+  {
+    "id": "ch_history_02",
+    "name": "Dark History Secrets",
+    "handle": "@DarkHistoryShorts",
+    "avatar": "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=150&h=150&fit=crop",
+    "subscribers": 28900,
+    "totalViews": 920000,
+    "niche": "Dark History",
+    "status": "connected",
+    "primaryLang": "English",
+    "optimalPostingTime": "8:00 PM EST",
+    "targetAudience": "US, DE, UK (Age 21-44)",
+    "avgRetention": "68.5%"
+  },
+  {
+    "id": "ch_tech_03",
+    "name": "Tech & AI Daily",
+    "handle": "@TechAIDailyShorts",
+    "avatar": "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=150&h=150&fit=crop",
+    "subscribers": 61200,
+    "totalViews": 3410000,
+    "niche": "AI & Technology",
+    "status": "connected",
+    "primaryLang": "English",
+    "optimalPostingTime": "5:00 PM EST",
+    "targetAudience": "US, IN, SG (Age 18-34)",
+    "avgRetention": "81.0%"
+  }
+]

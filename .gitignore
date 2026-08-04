@@ -37,5 +37,8 @@ ShortGPT/videos/*
 !ShortGPT/videos/.gitignore
 ShortGPT/.database/
 ShortGPT/*.json
+backend/data/
+backend/data/*.json
+backend/autodev_state.json
 
 
