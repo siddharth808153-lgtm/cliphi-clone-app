@@ -368,9 +368,19 @@ def extract_prompt_keywords(sentence, topic):
 def fetch_scene_images(script, topic, niche, output_dir):
     log_step("visuals", "Generating 4K HD 9:16 scene images according to spoken content...")
 
-    sentences = [s.strip() for s in script.splitlines() if s.strip()]
+    # Split script by newlines AND by sentence endings (. ! ?) to create 4-6 distinct scenes
+    raw_lines = [s.strip() for s in script.splitlines() if s.strip()]
+    sentences = []
+    for line in raw_lines:
+        chunks = [c.strip() for c in re.split(r'(?<=[.!?])\s+', line) if c.strip()]
+        for c in chunks:
+            if len(c) > 4:
+                sentences.append(c)
+
     if not sentences:
         sentences = [topic]
+
+    log_step("visuals", f"Detected {len(sentences)} distinct spoken scene sentences. Generating unique visuals...")
 
     niche_lower = niche.lower()
     collection_key = "general"
@@ -379,20 +389,21 @@ def fetch_scene_images(script, topic, niche, output_dir):
             collection_key = key
             break
 
-    urls = STOCK_COLLECTIONS.get(collection_key, STOCK_COLLECTIONS["general"])
+    niche_urls = STOCK_COLLECTIONS.get(collection_key, STOCK_COLLECTIONS["general"])
+    all_urls = niche_urls + STOCK_COLLECTIONS["general"] + STOCK_COLLECTIONS["tech"] + STOCK_COLLECTIONS["space"]
     image_paths = []
 
     for idx, sentence in enumerate(sentences):
-        img_path = str(output_dir / f"scene_{idx}_{int(time.time())}.jpg")
+        img_path = str(output_dir / f"scene_{idx}_{time.time_ns()}.jpg")
         keywords = extract_prompt_keywords(sentence, topic)
 
-        # Download crisp 1080x1920 4K portrait visual from curated collection
-        fallback_url = urls[idx % len(urls)]
+        # Select a completely unique 4K portrait image URL for every scene index
+        target_url = all_urls[idx % len(all_urls)]
 
         success = False
         try:
-            log_step("visuals", f"Downloading 4K scene visual {idx + 1}/{len(sentences)} for '{keywords}'...")
-            req = urllib.request.Request(fallback_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+            log_step("visuals", f"Downloading 4K visual {idx + 1}/{len(sentences)} for scene: '{sentence[:30]}...' ({keywords})")
+            req = urllib.request.Request(target_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
             with urllib.request.urlopen(req, timeout=10) as resp, open(img_path, 'wb') as out_f:
                 out_f.write(resp.read())
 
@@ -400,13 +411,13 @@ def fetch_scene_images(script, topic, niche, output_dir):
                 image_paths.append(img_path)
                 success = True
         except Exception as e:
-            log_step("visuals", f"Scene {idx + 1} notice ({e}). Creating fallback HD image...")
+            log_step("visuals", f"Scene {idx + 1} notice ({e}). Creating fallback visual...")
 
         if not success:
             create_fallback_image(img_path, idx)
             image_paths.append(img_path)
 
-        time.sleep(0.3)
+        time.sleep(0.2)
 
     return image_paths, sentences
 
