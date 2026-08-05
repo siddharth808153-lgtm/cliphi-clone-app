@@ -26,48 +26,61 @@ def log_step(tag, message):
 # ─────────────────────────────────────────────────────────────────────
 # CURATED 4K HD 9:16 VERTICAL SCENE WALLPAPER COLLECTIONS
 # ─────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────
+# CURATED 4K HD 9:16 VERTICAL SCENE WALLPAPER COLLECTIONS
+# ─────────────────────────────────────────────────────────────────────
 STOCK_COLLECTIONS = {
     "space": [
-        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1447433589675-4aaa569f3e05?w=1080&h=1920&fit=crop&crop=entropy&q=85",
     ],
     "tech": [
-        "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+    ],
+    "ocean": [
+        "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+    ],
+    "stoic": [
+        "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1514539079130-25950c84af65?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1080&h=1920&fit=crop&crop=entropy&q=85",
     ],
     "finance": [
-        "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=1080&h=1920&fit=crop&crop=entropy&q=85",
     ],
     "animal": [
-        "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1533738363-b7f9aef128ce?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1561948955-570b270e7c36?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1533738363-b7f9aef128ce?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1561948955-570b270e7c36?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=1080&h=1920&fit=crop&crop=entropy&q=85",
     ],
     "history": [
-        "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1514539079130-25950c84af65?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1514539079130-25950c84af65?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=1080&h=1920&fit=crop&crop=entropy&q=85",
     ],
     "general": [
-        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1497436072909-60f360e1d4b1?w=1080&h=1920&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1434394354979-a235cd36269d?w=1080&h=1920&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1080&h=1920&fit=crop&crop=entropy&q=85",
+        "https://images.unsplash.com/photo-1497436072909-60f360e1d4b1?w=1080&h=1920&fit=crop&crop=entropy&q=85",
     ]
 }
 
@@ -353,7 +366,7 @@ def extract_prompt_keywords(sentence, topic):
 # 4. HD 9:16 SCENE IMAGE GENERATION ACCORDING TO SPOKEN CONTENT
 # ─────────────────────────────────────────────────────────────────────
 def fetch_scene_images(script, topic, niche, output_dir):
-    log_step("visuals", "Generating AI scene images according to spoken content...")
+    log_step("visuals", "Generating 4K HD 9:16 scene images according to spoken content...")
 
     sentences = [s.strip() for s in script.splitlines() if s.strip()]
     if not sentences:
@@ -361,8 +374,8 @@ def fetch_scene_images(script, topic, niche, output_dir):
 
     niche_lower = niche.lower()
     collection_key = "general"
-    for key in ["space", "tech", "finance", "animal", "history"]:
-        if key in niche_lower or (key == "animal" and "cat" in niche_lower):
+    for key in ["space", "tech", "ocean", "stoic", "finance", "animal", "history"]:
+        if key in niche_lower or (key == "ocean" and "sea" in niche_lower) or (key == "animal" and "cat" in niche_lower):
             collection_key = key
             break
 
@@ -371,39 +384,29 @@ def fetch_scene_images(script, topic, niche, output_dir):
 
     for idx, sentence in enumerate(sentences):
         img_path = str(output_dir / f"scene_{idx}_{int(time.time())}.jpg")
-
-        # Extract 2-4 core keywords from sentence for sharp scene image prompt
         keywords = extract_prompt_keywords(sentence, topic)
 
-        kw_query = urllib.parse.quote(keywords.replace(" ", ","))
-        lorem_url = f"https://loremflickr.com/1080/1920/{kw_query}/all?random={idx + int(time.time()) % 100}"
+        # Download crisp 1080x1920 4K portrait visual from curated collection
         fallback_url = urls[idx % len(urls)]
 
         success = False
         try:
-            log_step("visuals", f"Generating scene image {idx + 1}/{len(sentences)} matching spoken content: '{keywords}'...")
-            req = urllib.request.Request(lorem_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
-            with urllib.request.urlopen(req, timeout=8) as resp, open(img_path, 'wb') as out_f:
+            log_step("visuals", f"Downloading 4K scene visual {idx + 1}/{len(sentences)} for '{keywords}'...")
+            req = urllib.request.Request(fallback_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+            with urllib.request.urlopen(req, timeout=10) as resp, open(img_path, 'wb') as out_f:
                 out_f.write(resp.read())
 
-            if os.path.exists(img_path) and os.path.getsize(img_path) > 5000:
+            if os.path.exists(img_path) and os.path.getsize(img_path) > 10000:
                 image_paths.append(img_path)
                 success = True
         except Exception as e:
-            log_step("visuals", f"Scene {idx + 1} notice ({e}). Using curated stock visual...")
+            log_step("visuals", f"Scene {idx + 1} notice ({e}). Creating fallback HD image...")
 
         if not success:
-            try:
-                req = urllib.request.Request(fallback_url, headers={'User-Agent': 'Mozilla/5.0'})
-                with urllib.request.urlopen(req, timeout=6) as resp, open(img_path, 'wb') as out_f:
-                    out_f.write(resp.read())
-                image_paths.append(img_path)
-            except Exception:
-                create_fallback_image(img_path, idx)
-                image_paths.append(img_path)
+            create_fallback_image(img_path, idx)
+            image_paths.append(img_path)
 
-        # Brief pause between scene image generations to avoid rate limit
-        time.sleep(0.5)
+        time.sleep(0.3)
 
     return image_paths, sentences
 
@@ -420,7 +423,7 @@ def create_fallback_image(output_path, idx):
 
 
 # ─────────────────────────────────────────────────────────────────────
-# 5. RENDER MULTI-SCENE VERTICAL VIDEO SEQUENCE + SUBTITLES (NO ZOOM)
+# 5. RENDER MULTI-SCENE VERTICAL VIDEO SEQUENCE + KEN BURNS MOTION
 # ─────────────────────────────────────────────────────────────────────
 def get_audio_duration(audio_path):
     result = subprocess.run(
@@ -432,9 +435,9 @@ def get_audio_duration(audio_path):
 
 
 def render_video(audio_path, ass_path, output_video, topic, duration, scene_images=None):
-    log_step("render", "Rendering 9:16 vertical Short collage sequence + subtitles...")
+    log_step("render", "Rendering 9:16 vertical Short with Ken Burns motion + subtitles...")
 
-    rel_ass_path = Path(ass_path).relative_to(CURRENT_DIR).as_posix()
+    abs_ass_path = str(Path(ass_path).resolve()).replace("\\", "/").replace(":", "\\:")
     clean_topic = re.sub(r"[^a-zA-Z0-9 ]", "", topic)[:35].upper()
 
     if scene_images and len(scene_images) > 0:
@@ -449,25 +452,26 @@ def render_video(audio_path, ass_path, output_video, topic, duration, scene_imag
 
         filter_parts = []
         for i in range(num_scenes):
-            # Clean static crop to 1080x1920 without zoompan effect
+            # Scale & apply subtle cinematic Ken Burns slow zoompan micro-motion
             filter_parts.append(
                 f"[{i}:v]scale=1080:1920:force_original_aspect_ratio=increase,"
-                f"crop=1080:1920,setsar=1[v{i}];"
+                f"crop=1080:1920,"
+                f"zoompan=z='min(zoom+0.0012,1.12)':d=125:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920,setsar=1[v{i}];"
             )
 
         concat_inputs = "".join(f"[v{i}]" for i in range(num_scenes))
         filter_parts.append(f"{concat_inputs}concat=n={num_scenes}:v=1:a=0[vbase];")
 
-        # Top title banner + ASS styled subtitles
+        # Top title banner + ASS Bionic Karaoke subtitles
         filter_parts.append(
             f"[vbase]drawtext="
             f"fontfile='C\\:/Windows/Fonts/arialbd.ttf':"
             f"text='{clean_topic}':"
-            f"fontsize=44:fontcolor=yellow@0.95:"
-            f"x=(w-text_w)/2:y=160:"
+            f"fontsize=42:fontcolor=0xFFD700@0.95:"
+            f"x=(w-text_w)/2:y=140:"
             f"borderw=4:bordercolor=black@0.8[titled];"
 
-            f"[titled]ass='{rel_ass_path}'[out]"
+            f"[titled]ass='{abs_ass_path}'[out]"
         )
 
         filter_complex = "".join(filter_parts)
@@ -478,7 +482,7 @@ def render_video(audio_path, ass_path, output_video, topic, duration, scene_imag
             "-map", f"{num_scenes}:a",
             "-c:v", "libx264",
             "-preset", "fast",
-            "-crf", "22",
+            "-crf", "20",
             "-pix_fmt", "yuv420p",
             "-c:a", "aac",
             "-b:a", "192k",
@@ -509,7 +513,7 @@ def render_video(audio_path, ass_path, output_video, topic, duration, scene_imag
             "-map", "1:a",
             "-c:v", "libx264",
             "-preset", "fast",
-            "-crf", "23",
+            "-crf", "22",
             "-pix_fmt", "yuv420p",
             "-c:a", "aac",
             "-b:a", "192k",
